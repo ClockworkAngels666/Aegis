@@ -1,0 +1,244 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-garamond);
+  --font-mono: var(--font-garamond);
+  --font-heading: var(--font-garamond);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-good: var(--status-good);
+  --color-warning: var(--status-warning);
+  --color-serious: var(--status-serious);
+  --color-critical: var(--status-critical);
+  --color-series-1: var(--series-1);
+  --color-series-2: var(--series-2);
+  --color-faint: var(--faint-foreground);
+  --color-warning-ink: var(--warning-ink);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+}
+
+/* Light theme on a white page. */
+:root {
+  color-scheme: light;
+  --background: #ffffff;
+  --foreground: #111318;
+  --card: #ffffff;
+  --card-foreground: #111318;
+  --popover: #ffffff;
+  --popover-foreground: #111318;
+  --primary: #111318;
+  --primary-foreground: #ffffff;
+  --secondary: #f3f4f6;
+  --secondary-foreground: #111318;
+  --muted: #f4f5f7;
+  --muted-foreground: #5b616b;
+  --faint-foreground: #767c86;
+  --accent: #f3f4f6;
+  --accent-foreground: #111318;
+  --destructive: #c42b2b;
+  --border: #e4e7eb;
+  --input: #d5d9df;
+  --ring: #2a78d6;
+  --radius: 0.375rem;
+  --warning-ink: #8a5a00;
+
+  /* status: reserved for meaning, always paired with an icon + label */
+  --status-good: #0ca30c;
+  --status-warning: #fab219;
+  --status-serious: #ec835a;
+  --status-critical: #d03b3b;
+
+  /* chart roles (validated on the white surface) */
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+  --chart-baseline: #8f959e;
+  --chart-grid: #eef0f2;
+  --chart-axis: #c9cdd3;
+
+  /* illustrations and map */
+  --scene-sky-top: #f7fafd;
+  --scene-sky-bottom: #ffffff;
+  --map-ocean: #eef5fc;
+  --map-grat: #dde8f4;
+  --map-land: #e5e8ec;
+  --map-eu: #dbe7f6;
+  --map-exporter: #b6d0f1;
+  --map-inter: #fbe8c6;
+  --map-inter-active: #f5c46a;
+  --map-ru: #f2cccc;
+  --map-border: #ffffff;
+  --map-label: #2b3440;
+  --map-halo: #ffffff;
+  --map-russia-text: #c98f8f;
+}
+
+/* Dark theme (toggle in the header) */
+.dark {
+  color-scheme: dark;
+  --background: #0d1014;
+  --foreground: #e7e9ec;
+  --card: #141820;
+  --card-foreground: #e7e9ec;
+  --popover: #181d26;
+  --popover-foreground: #e7e9ec;
+  --primary: #e7e9ec;
+  --primary-foreground: #111318;
+  --secondary: #1d232c;
+  --secondary-foreground: #e7e9ec;
+  --muted: #1b2028;
+  --muted-foreground: #9aa2ad;
+  --faint-foreground: #747d89;
+  --accent: #1d232c;
+  --accent-foreground: #e7e9ec;
+  --destructive: #f07070;
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.16);
+  --ring: #3987e5;
+  --warning-ink: #f2c14e;
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --chart-baseline: #6b7380;
+  --chart-grid: #232933;
+  --chart-axis: #3a4250;
+  --scene-sky-top: #18202b;
+  --scene-sky-bottom: #141820;
+  --map-ocean: #0f1722;
+  --map-grat: #1a2433;
+  --map-land: #262d38;
+  --map-eu: #213452;
+  --map-exporter: #2d5590;
+  --map-inter: #4a3c22;
+  --map-inter-active: #a77a26;
+  --map-ru: #4d2a2e;
+  --map-border: #0d1014;
+  --map-label: #e7e9ec;
+  --map-halo: #0d1014;
+  --map-russia-text: #b07a7a;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+    /* Garamond has a small x-height: scale it up to read like the UI sizes were set for,
+       and use lining figures so numbers sit level with capitals in tables and charts. */
+    font-size-adjust: 0.47;
+    font-variant-numeric: lining-nums;
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  th {
+    font-weight: 700;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  ::selection {
+    background: rgba(42, 120, 214, 0.2);
+  }
+  /* Visible keyboard focus for every control; zero specificity, so components with their own
+     focus style (shadcn rings) keep it */
+  :where(button, a, [role="tab"], [role="button"], input[type="range"]):focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+}
+
+/* Radar sweep in the Aegis mark */
+.radar-sweep {
+  transform-box: view-box;
+  transform-origin: 16px 20.5px;
+  animation: radar-sweep 4s ease-in-out infinite alternate;
+}
+@keyframes radar-sweep {
+  from { transform: rotate(-70deg); }
+  to { transform: rotate(10deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .radar-sweep { animation: none; }
+}
+
+/* Chimney smoke in the route illustration */
+.smoke circle {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: smoke-rise 3.6s ease-out infinite;
+  opacity: 0;
+}
+@keyframes smoke-rise {
+  0% { opacity: 0; transform: translate(0, 0) scale(0.6); }
+  25% { opacity: 0.8; }
+  100% { opacity: 0; transform: translate(10px, -34px) scale(1.4); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .smoke circle {
+    animation: none;
+    opacity: 0.6;
+  }
+}
+
+.tabular {
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.memo-h {
+  margin-bottom: 4px;
+  border-bottom: 1px solid #d4d4d0;
+  padding-bottom: 2px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* Print only the briefing (a portal copy rendered as a direct child of <body>) */
+#memo-print {
+  display: none;
+}
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+  html,
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  body > *:not(#memo-print) {
+    display: none !important;
+  }
+  #memo-print {
+    display: block;
+  }
+}
