@@ -5,6 +5,8 @@ geopolitical risk analysts: it screens a buyer against sanctions lists, classifi
 EU's battlefield-item list, and detects anomalous EU exports to third countries that point to
 circumvention of the Russia sanctions.
 
+**Live:** https://aegistracker.vercel.app
+
 ![Aegis dashboard](docs/screenshot.png)
 
 ## What it does

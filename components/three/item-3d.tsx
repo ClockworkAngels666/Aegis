@@ -3,12 +3,11 @@
 import { PauseIcon, PlayIcon } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
-import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { Frame3D, ToolButton, type Tip, tipAt, usePicking, useStage } from "@/components/three/frame";
 import { buildModel } from "@/components/three/item-models";
 import { productKind } from "@/components/product-art";
 import { useTheme } from "@/lib/theme";
-import { cssVar, disposeTree } from "@/lib/three-stage";
+import { cssVar, disposeTree, studioEnvironment } from "@/lib/three-stage";
 import { cn } from "@/lib/utils";
 
 const HOME = { pos: new THREE.Vector3(2.3, 1.9, 2.6), target: new THREE.Vector3(0, 0.55, 0) };
@@ -42,22 +41,29 @@ export function Item3D({ hs, description }: { hs: string; description: string | 
   const [parts, setParts] = useState<string[]>([]);
   const [hovered, setHovered] = useState<string | null>(null);
   const [spinning, setSpinning] = useState(true);
+  const [shown, setShown] = useState(false);
   const groupRef = useRef<THREE.Group | null>(null);
+  // The model is shown once its reflections exist, so its shaders compile once, with them
+  const envRef = useRef<Promise<unknown> | null>(null);
   const kind = productKind(hs);
 
   useEffect(() => {
     const stage = stageRef.current;
     if (!ready || !stage) return;
-    const pmrem = new THREE.PMREMGenerator(stage.renderer);
-    const env = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-    stage.scene.environment = env;
+    let alive = true;
+    let env: THREE.Texture | null = null;
+    envRef.current = studioEnvironment(stage.renderer, () => alive).then((t) => {
+      if (alive) stage.scene.environment = env = t;
+      else t?.dispose();
+    }, () => undefined); // without reflections the model still shows, only flatter
     const stop = () => setSpinning(false);
     stage.controls.addEventListener("start", stop);
     return () => {
+      alive = false;
       stage.controls.removeEventListener("start", stop);
       stage.scene.environment = null;
-      env.dispose();
-      pmrem.dispose();
+      env?.dispose();
+      envRef.current = null;
     };
   }, [ready, stageRef]);
 
@@ -80,7 +86,11 @@ export function Item3D({ hs, description }: { hs: string; description: string | 
     root.add(contactShadow());
     const model = buildModel(kind);
     root.add(model.group);
-    stage.scene.add(root);
+    let alive = true;
+    let hide = () => {};
+    (envRef.current ?? Promise.resolve()).then(() => {
+      if (alive) hide = stage.reveal(root, () => setShown(true));
+    });
     groupRef.current = model.group;
 
     // Frame the model: fit its bounding sphere in the vertical field of view
@@ -108,8 +118,9 @@ export function Item3D({ hs, description }: { hs: string; description: string | 
     }
     stage.invalidate();
     return () => {
+      alive = false;
       if (tick) stage.frame.delete(tick);
-      stage.scene.remove(root);
+      hide();
       disposeTree(root);
       groupRef.current = null;
     };
@@ -153,6 +164,9 @@ export function Item3D({ hs, description }: { hs: string; description: string | 
       <Frame3D hostRef={hostRef} stageRef={stageRef} failed={failed} tip={tip} className="h-[300px] bg-card"
         label={`Rotatable 3D model of HS ${hs}${description ? `, ${description}` : ""}`}
         hint="Drag to turn · hover a part to name it"
+        overlay={!shown && !failed && (
+          <div className="pointer-events-none absolute inset-0 grid place-items-center text-sm text-muted-foreground">Loading model…</div>
+        )}
         tools={!reduce && (
           <ToolButton label={spinning ? "Stop turning" : "Turn automatically"} onClick={() => setSpinning(!spinning)}>
             {spinning ? <PauseIcon className="size-3.5" /> : <PlayIcon className="size-3.5" />}

@@ -157,7 +157,7 @@ export function RiskCube3D({ rows, onAssess }: { rows: BatchRowOut[]; onAssess?:
     dropGeo.setAttribute("position", new THREE.Float32BufferAttribute(drop, 3));
     g.add(new THREE.LineSegments(dropGeo, new THREE.LineBasicMaterial({ color: ink, transparent: true, opacity: 0.45 })));
 
-    stage.scene.add(g);
+    const hide = stage.reveal(g);
     points.current = meshes;
     stage.invalidate();
 
@@ -172,7 +172,7 @@ export function RiskCube3D({ rows, onAssess }: { rows: BatchRowOut[]; onAssess?:
     stage.after.add(update);
     return () => {
       stage.after.delete(update);
-      stage.scene.remove(g);
+      hide();
       disposeTree(g);
       points.current = [];
     };

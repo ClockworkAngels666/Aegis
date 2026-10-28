@@ -188,12 +188,12 @@ export function Skyline3D({ data, rows, byTier, onHover, onAssess }: {
     }
     grown.current = true;
 
-    stage.scene.add(g);
+    const hide = stage.reveal(g);
     stage.invalidate();
     return () => {
       alive = false;
       if (grow) stage.frame.delete(grow);
-      stage.scene.remove(g);
+      hide();
       disposeTree(g);
       bars.current = null;
     };

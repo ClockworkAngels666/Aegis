@@ -174,11 +174,11 @@ export function Terrain3D({ m, partner }: { m: Monthly; partner: string }) {
       stage.frame.add(grow);
     }
 
-    stage.scene.add(g);
+    const hide = stage.reveal(g);
     stage.invalidate();
     return () => {
       if (grow) stage.frame.delete(grow);
-      stage.scene.remove(g);
+      hide();
       disposeTree(g);
       bars.current = null;
     };

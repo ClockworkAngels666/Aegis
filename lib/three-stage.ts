@@ -4,6 +4,7 @@
  */
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 
 let webgl: boolean | undefined;
 
@@ -69,6 +70,50 @@ export function disposeTree(root: THREE.Object3D) {
   });
 }
 
+/** PMREMGenerator internals (three r186) needed to compile its shaders ahead of time. */
+interface PmremInternals {
+  _setSize?: (cubeSize: number) => void;
+  _allocateTargets?: () => THREE.WebGLRenderTarget;
+  _blurMaterial?: THREE.Material | null;
+  _ggxMaterial?: THREE.Material | null;
+  _lodMeshes?: THREE.Mesh[];
+}
+
+/**
+ * Soft studio reflections (three's RoomEnvironment) for metal and glass. Built straight away, the PMREM
+ * pass compiles five shaders on the spot and freezes the page for up to a second on a first visit, so
+ * they are compiled in parallel first. Resolves to null if `alive()` turns false meanwhile.
+ */
+export async function studioEnvironment(renderer: THREE.WebGLRenderer, alive: () => boolean): Promise<THREE.Texture | null> {
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  const room = new RoomEnvironment();
+  try {
+    const p = pmrem as unknown as PmremInternals;
+    if (p._setSize && p._allocateTargets) {
+      p._setSize(256); // fromScene's default size, so the passes below are the ones it will use
+      p._allocateTargets().dispose();
+      const passes = new THREE.Scene();
+      // Same geometry as the real passes: vertex attributes are part of the shader cache key
+      const plane = p._lodMeshes?.[0]?.geometry;
+      for (const m of [p._blurMaterial, p._ggxMaterial]) if (m && plane) passes.add(new THREE.Mesh(plane, m));
+      // Shaders that draw into a render target (linear output) are other variants than on-screen ones
+      const target = new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType });
+      renderer.setRenderTarget(target);
+      const compiled = Promise.all([
+        renderer.compileAsync(room, new THREE.PerspectiveCamera(90, 1, 0.1, 100)),
+        renderer.compileAsync(passes, new THREE.OrthographicCamera(0, 1, 0, 1, 0, 1)),
+      ]);
+      renderer.setRenderTarget(null);
+      target.dispose();
+      await compiled;
+    }
+    return alive() ? pmrem.fromScene(room, 0.04).texture : null;
+  } finally {
+    pmrem.dispose();
+    room.dispose();
+  }
+}
+
 /** Ambient animations (moving vehicles, auto-rotation) are drawn at most this often. */
 const AMBIENT_FPS = 30;
 /** Rendering above 1.5 device pixels per CSS pixel costs a lot of GPU time for little visible gain. */
@@ -95,6 +140,12 @@ export interface Stage {
   after: Set<() => void>;
   reduce: boolean;
   invalidate(): void;
+  /**
+   * Adds `object` to the scene once its shaders are compiled. They compile in parallel with the page, so a
+   * new scene appears a moment later instead of freezing the page on its first frame. Returns a function
+   * that removes it again (also before it has appeared).
+   */
+  reveal(object: THREE.Object3D, onShown?: () => void): () => void;
   pick(e: { clientX: number; clientY: number }, objects: THREE.Object3D[]): THREE.Intersection[];
   /** The pointer ray in world space (for picking without ray-testing every triangle). */
   rayAt(e: { clientX: number; clientY: number }): THREE.Ray;
@@ -201,7 +252,9 @@ export function createStage(host: HTMLElement, o: {
       renderer.render(scene, camera);
       after.forEach((f) => f());
     }
-    if (interacting || settling || flight || frame.size || controls.autoRotate) raf = requestAnimationFrame(tick);
+    // controls.update() above fires "change", which may already have queued the next frame: queuing a second one
+    // here would double the renders on every frame of a drag
+    if (!raf && (dirty || interacting || settling || flight || frame.size || controls.autoRotate)) raf = requestAnimationFrame(tick);
   }
 
   controls.addEventListener("change", invalidate);
@@ -262,8 +315,30 @@ export function createStage(host: HTMLElement, o: {
   };
   controls.addEventListener("start", stopFlight);
 
+  let disposed = false;
   const stage: Stage = {
     scene, camera, controls, renderer, frame, after, reduce: o.reduce, invalidate, pick, rayAt, toScreen,
+    reveal(object, onShown) {
+      let removed = false;
+      const show = () => {
+        if (removed || disposed) return;
+        scene.add(object);
+        renderer.shadowMap.needsUpdate = true; // shadow maps that only redraw on request must include it
+        invalidate();
+        onShown?.();
+      };
+      let compiled: Promise<unknown>;
+      try {
+        compiled = renderer.compileAsync(object, camera, scene);
+      } catch {
+        compiled = Promise.resolve(); // e.g. a lost context: draw it anyway
+      }
+      compiled.then(show, show);
+      return () => {
+        removed = true;
+        scene.remove(object);
+      };
+    },
     fly(position, target = controls.target.clone(), seconds = 1.1) {
       stopFlight();
       if (stage.reduce || seconds <= 0) {
@@ -312,6 +387,7 @@ export function createStage(host: HTMLElement, o: {
       stage.fly(homePos.clone(), homeTarget.clone(), 0.9);
     },
     dispose() {
+      disposed = true;
       cancelAnimationFrame(raf);
       ro.disconnect();
       io.disconnect();

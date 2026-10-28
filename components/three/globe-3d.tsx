@@ -284,7 +284,7 @@ export function Globe3D({ exporter, exporterName, intermediary, intermediaryName
       g.add(dot);
       picks.push(dot);
     }
-    stage.scene.add(g);
+    const hide = stage.reveal(g);
     pickables.current = picks;
     stage.invalidate();
 
@@ -300,7 +300,7 @@ export function Globe3D({ exporter, exporterName, intermediary, intermediaryName
       alive = false;
       stage.camera.remove(sun);
       sun.dispose();
-      stage.scene.remove(g);
+      hide();
       disposeTree(g);
       pickables.current = [];
     };
@@ -368,13 +368,13 @@ export function Globe3D({ exporter, exporterName, intermediary, intermediaryName
     const animate = (t: number) => place(t);
     if (!reduce && shipments.length) stage.frame.add(animate);
 
-    stage.scene.add(g);
+    const hide = stage.reveal(g);
     routeMeshes.current = meshes;
     flowPicks.current = picks;
     stage.invalidate();
     return () => {
       stage.frame.delete(animate);
-      stage.scene.remove(g);
+      hide();
       disposeTree(g);
       routeMeshes.current = new Map();
       flowPicks.current = [];

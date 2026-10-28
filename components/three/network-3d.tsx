@@ -180,7 +180,7 @@ export function Network3D({ e, company, jurisdiction }: { e: Entity; company: st
       g.add(sp);
       list.push(sp);
     }
-    stage.scene.add(g);
+    const hide = stage.reveal(g);
     sprites.current = list;
 
     const update = () => {
@@ -201,7 +201,7 @@ export function Network3D({ e, company, jurisdiction }: { e: Entity; company: st
     return () => {
       alive = false;
       stage.after.delete(update);
-      stage.scene.remove(g);
+      hide();
       disposeTree(g);
       sprites.current = [];
     };

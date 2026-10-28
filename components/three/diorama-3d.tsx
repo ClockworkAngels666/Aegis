@@ -447,13 +447,13 @@ export function Diorama3D({ a }: { a: Assessment }) {
     };
     if (!reduce) stage.frame.add(tick);
 
-    stage.scene.add(root);
+    const hide = stage.reveal(root);
     picks.current = [exp, buy, ru, ...movers.map((m) => m.obj), ...root.children.flatMap((c) => c.children.filter((o) => o instanceof THREE.Sprite))];
     stage.invalidate();
     return () => {
       alive = false;
       stage.frame.delete(tick);
-      stage.scene.remove(root);
+      hide();
       disposeTree(root);
       picks.current = [];
     };
