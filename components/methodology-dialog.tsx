@@ -8,7 +8,7 @@ import { componentLabel } from "@/lib/format";
 import type { Reference } from "@/lib/types";
 
 function H({ children }: { children: ReactNode }) {
-  return <h3 className="mt-5 mb-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">{children}</h3>;
+  return <h3 className="mt-5 mb-1.5 text-[15px] font-bold">{children}</h3>;
 }
 
 const COMPONENT_RULE: Record<string, string> = {

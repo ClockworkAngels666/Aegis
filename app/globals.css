@@ -34,6 +34,8 @@
   --color-series-2: var(--series-2);
   --color-faint: var(--faint-foreground);
   --color-warning-ink: var(--warning-ink);
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: calc(1.15 / 0.8125);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -173,20 +175,6 @@
   }
 }
 
-/* Radar sweep in the Aegis mark */
-.radar-sweep {
-  transform-box: view-box;
-  transform-origin: 16px 20.5px;
-  animation: radar-sweep 4s ease-in-out infinite alternate;
-}
-@keyframes radar-sweep {
-  from { transform: rotate(-70deg); }
-  to { transform: rotate(10deg); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .radar-sweep { animation: none; }
-}
-
 /* Chimney smoke in the route illustration */
 .smoke circle {
   transform-box: fill-box;
@@ -215,10 +203,8 @@
   border-bottom: 1px solid #d4d4d0;
   padding-bottom: 2px;
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 13px;
   font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
 }
 
 /* Print only the briefing (a portal copy rendered as a direct child of <body>) */

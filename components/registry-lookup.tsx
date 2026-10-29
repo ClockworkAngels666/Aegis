@@ -35,7 +35,7 @@ export function RegistryLookup({ name, country }: { name: string; country: strin
       {current.error && <p className="mt-2 text-[12px] text-destructive">{current.error}</p>}
       {current.data && (
         <div className="space-y-2">
-          <div className="text-[12px] font-bold uppercase tracking-[0.08em] text-muted-foreground">Company register (GLEIF)</div>
+          <div className="text-[14px] font-bold">Company register (GLEIF)</div>
           {current.data.flags.map((f) => (
             <p key={f.text} className="flex items-start gap-2 text-[13px]">
               <ToneIcon tone={f.severity === "critical" ? "critical" : f.severity === "high" ? "critical" : "serious"} className="mt-0.5 size-4" />

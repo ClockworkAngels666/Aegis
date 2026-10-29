@@ -3,7 +3,7 @@
 import { CaretRightIcon, ChartLineIcon, CheckIcon, FileTextIcon, LinkSimpleIcon, MapTrifoldIcon, PackageIcon, UserFocusIcon } from "@phosphor-icons/react";
 import { useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
-import { StatusBadge } from "@/components/status";
+import { StatusBadge, ToneIcon } from "@/components/status";
 import { CompanyMark, Flag, regionName } from "@/components/visuals";
 import { bandTone, entityTone, type Tone, toneVar, times, verdictTone } from "@/lib/format";
 import type { Assessment } from "@/lib/types";
@@ -65,7 +65,7 @@ export function AssessmentSummary({ a, onSection }: { a: Assessment; onSection: 
   const ytd = a.monthly?.ytd;
 
   return (
-    <section data-tour="verdict" className="border border-border bg-card shadow-[0_1px_2px_rgba(16,24,40,0.05)]" aria-live="polite">
+    <section data-tour="verdict" className="border border-border bg-card" aria-live="polite">
       <div className="flex flex-wrap items-start justify-between gap-4 px-5 py-4">
         <div className="flex min-w-0 items-start gap-3">
           <CompanyMark name={q.company} size={42} flagged={e.status !== "CLEAN"} />
@@ -89,8 +89,8 @@ export function AssessmentSummary({ a, onSection }: { a: Assessment; onSection: 
         </div>
       </div>
 
-      <div className="border-y border-border px-5 py-3" style={{ boxShadow: `inset 3px 0 0 ${toneVar[tone]}` }}>
-        <p className="text-[15px] font-bold">{a.verdict.title}</p>
+      <div className="border-y border-border px-5 py-3">
+        <p className="flex items-center gap-2 text-[16px] font-bold"><ToneIcon tone={tone} className="size-4" />{a.verdict.title}</p>
         {a.verdict.notes.length > 0 && (
           <ul className="mt-1 space-y-0.5 text-[13px] text-muted-foreground">
             {a.verdict.notes.map((n) => <li key={n}>{n}</li>)}

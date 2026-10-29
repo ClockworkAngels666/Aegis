@@ -27,7 +27,7 @@ export const PRESETS: { label: string; note: string; form: FormState }[] = [
   {
     label: "Bearings → Kazakhstan",
     note: "Clean buyer, critical route",
-    form: { company: "Northwind Components LLP", jurisdiction: "KZ", ubos: "John Doe", hs: "848210",
+    form: { company: "Northwind Components LLP", jurisdiction: "KZ", ubos: "", hs: "848210",
       exporter: "DE", intermediary: "KZ", live: false },
   },
   {
@@ -92,7 +92,7 @@ export function QueryPanel({ reference, form, setForm, onRun, loading, active }:
   return (
     <Panel title="New assessment" bodyClassName="space-y-4">
       <div>
-        <h3 className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Examples</h3>
+        <h3 className="mb-1.5 text-[15px] font-bold">Examples</h3>
         <div className="grid gap-1.5 sm:grid-cols-2 lg:grid-cols-1">
           {PRESETS.map((p, i) => (
             <button key={p.label} type="button" onClick={() => { setForm(p.form); onRun(p.form); }} aria-pressed={active === i}
@@ -111,7 +111,7 @@ export function QueryPanel({ reference, form, setForm, onRun, loading, active }:
       </div>
 
       <form onSubmit={submit} className="space-y-4 border-t border-border pt-4">
-        <h3 className="text-[11px] font-bold uppercase tracking-[0.14em] text-faint">Counterparty</h3>
+        <h3 className="text-[15px] font-bold">Counterparty</h3>
         <Field label="Company" htmlFor="company">
           <Input id="company" value={form.company} onChange={(e) => set({ company: e.target.value })}
             placeholder="Buyer name (any script)" autoComplete="off" />
@@ -133,7 +133,7 @@ export function QueryPanel({ reference, form, setForm, onRun, loading, active }:
             placeholder="Optional" />
         </Field>
 
-        <h3 className="border-t border-border pt-4 text-[11px] font-bold uppercase tracking-[0.14em] text-faint">Shipment</h3>
+        <h3 className="border-t border-border pt-4 text-[15px] font-bold">Shipment</h3>
         <Field label="HS code" htmlFor="hs"
           hint={hsInfo ? <>Tier {hsInfo.tier} · {hsInfo.description}</> : hsValid ? "Not on the EU battlefield item list" : "Six digits"}>
           <Input id="hs" list="hs-list" inputMode="numeric" value={form.hs} maxLength={6}

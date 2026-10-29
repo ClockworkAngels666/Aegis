@@ -1,6 +1,6 @@
 "use client";
 
-import { BinocularsIcon, CalculatorIcon, CrosshairIcon, GridFourIcon, ListChecksIcon, MoonIcon, SunIcon } from "@phosphor-icons/react";
+import { BinocularsIcon, MoonIcon, SunIcon } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { MethodologyDialog } from "@/components/methodology-dialog";
 import type { Reference } from "@/lib/types";
@@ -17,15 +17,13 @@ function Brand() {
           stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round" />
         <path d="M9.5 20.5 A6.5 6.5 0 0 1 22.5 20.5" fill="none" stroke="var(--chart-baseline)" strokeWidth="1.4" />
         <path d="M12.8 20.5 A3.2 3.2 0 0 1 19.2 20.5" fill="none" stroke="var(--chart-baseline)" strokeWidth="1.4" />
-        <g className="radar-sweep">
-          <line x1="16" y1="20.5" x2="21" y2="12.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-        </g>
+        <line x1="16" y1="20.5" x2="21" y2="12.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
         <circle cx="16" cy="20.5" r="1.6" fill="currentColor" />
         <circle cx="21.2" cy="11.8" r="2.3" fill="var(--status-critical)" />
       </svg>
       <div className="leading-none">
-        <div className="text-[16px] font-bold tracking-[0.28em]">AEGIS</div>
-        <div className="mt-0.5 hidden text-[11px] text-muted-foreground xl:block">
+        <div className="text-[19px] font-bold">Aegis</div>
+        <div className="mt-0.5 hidden text-[12px] text-muted-foreground xl:block">
           Open-Source Trade Intelligence &amp; Dual-Use Sanctions Radar
         </div>
       </div>
@@ -33,11 +31,11 @@ function Brand() {
   );
 }
 
-const NAV: { view: View; label: string; icon: typeof GridFourIcon }[] = [
-  { view: "assess", label: "Assessment", icon: CrosshairIcon },
-  { view: "radar", label: "Radar", icon: GridFourIcon },
-  { view: "batch", label: "Batch screening", icon: ListChecksIcon },
-  { view: "calc", label: "Calculator", icon: CalculatorIcon },
+const NAV: { view: View; label: string }[] = [
+  { view: "assess", label: "Assessment" },
+  { view: "radar", label: "Radar" },
+  { view: "batch", label: "Batch screening" },
+  { view: "calc", label: "Calculator" },
 ];
 
 export function AppHeader({ reference, view, onView, onTour }: {
@@ -54,12 +52,12 @@ export function AppHeader({ reference, view, onView, onTour }: {
         <div className="flex h-14 items-center"><Brand /></div>
         <nav className="order-last -mx-4 flex w-full gap-1 overflow-x-auto border-t border-border px-4 md:order-none md:mx-0 md:h-14 md:w-auto md:border-0 md:px-0"
           aria-label="Views">
-          {NAV.map(({ view: v, label, icon: Icon }) => (
+          {NAV.map(({ view: v, label }) => (
             <button key={v} type="button" onClick={() => onView(v)} data-tour={v === "radar" ? "nav-radar" : undefined}
               aria-current={view === v ? "page" : undefined}
-              className={cn("flex shrink-0 items-center gap-1.5 border-b-2 px-3 py-2.5 text-[14px] transition-colors",
+              className={cn("flex shrink-0 items-center border-b-2 px-3 py-2.5 text-[15px] transition-colors",
                 view === v ? "border-foreground font-bold text-foreground" : "border-transparent text-muted-foreground hover:text-foreground")}>
-              <Icon className="size-4" /> {label}
+              {label}
             </button>
           ))}
         </nav>

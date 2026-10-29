@@ -58,7 +58,7 @@ const Heatmap = memo(function Heatmap({ rows, partners, onHover, onAssess }: {
               <th key={p.code} className="border-b border-border px-1 py-2 font-normal" title={p.name}>
                 <div className="flex flex-col items-center gap-0.5">
                   <Flag code={p.code} size={18} />
-                  <span className="text-[10px] text-muted-foreground">{p.code}</span>
+                  <span className="text-[12px] text-muted-foreground">{p.code}</span>
                 </div>
               </th>
             ))}

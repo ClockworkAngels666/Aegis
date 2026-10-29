@@ -32,7 +32,7 @@ export function LegalPanel({ c }: { c: Classification }) {
         <div className="mt-3 flex flex-wrap items-center gap-1.5">
           <span className="text-[12px] text-muted-foreground">Possible dual-use entries (Annex I)</span>
           {c.annex_i_indicative.map((x) => (
-            <Badge key={x} variant="outline" className="text-[10px]">{x}</Badge>
+            <Badge key={x} variant="outline" className="text-[12px]">{x}</Badge>
           ))}
         </div>
       )}
@@ -44,7 +44,7 @@ export function LegalPanel({ c }: { c: Classification }) {
           </li>
         ))}
       </ul>
-      <p className="mt-3 text-[10px] text-faint">{c.source}</p>
+      <p className="mt-3 text-[12px] text-faint">{c.source}</p>
     </Panel>
   );
 }
@@ -74,7 +74,7 @@ export function EntityPanel({ e, company, jurisdiction }: { e: Entity; company: 
                 {s.role === "Company" ? <CompanyMark name={s.name} size={30} flagged={s.status !== "CLEAN"} />
                   : <UserCircleIcon weight="duotone" className="size-[30px] shrink-0 text-muted-foreground" />}
                 <div className="min-w-0">
-                  <div className="text-[10px] uppercase tracking-wider text-faint">{s.role}</div>
+                  <div className="text-[12px] text-faint">{s.role}</div>
                   <div className="truncate text-sm font-bold">{s.name}</div>
                 </div>
               </div>
@@ -109,13 +109,13 @@ export function EntityPanel({ e, company, jurisdiction }: { e: Entity; company: 
                               className="inline-flex items-center gap-1 hover:text-series-1 hover:underline">
                               {m.name} <ArrowSquareOutIcon className="size-3 shrink-0 text-faint" />
                             </a>
-                            {m.matched_on && <div className="text-[10px] text-faint">matched: {m.matched_on}</div>}
+                            {m.matched_on && <div className="text-[12px] text-faint">matched: {m.matched_on}</div>}
                           </div>
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
-                          {m.lists.map((l) => <Badge key={l} variant="outline" className="text-[10px]">{l}</Badge>)}
+                          {m.lists.map((l) => <Badge key={l} variant="outline" className="text-[12px]">{l}</Badge>)}
                         </div>
                       </TableCell>
                       <TableCell>

@@ -10,10 +10,7 @@ export function markTexture(name: string, flagged: boolean, px = 256): THREE.Can
   c.width = c.height = px;
   const ctx = c.getContext("2d")!;
   ctx.scale(px / 40, px / 40);
-  const grad = ctx.createLinearGradient(0, 0, 40, 40);
-  grad.addColorStop(0, color);
-  grad.addColorStop(1, `${color}b8`);
-  ctx.fillStyle = grad;
+  ctx.fillStyle = color;
   ctx.beginPath();
   if (shape === 0) ctx.roundRect(2, 2, 36, 36, 8);
   else if (shape === 1) ctx.arc(20, 20, 18, 0, Math.PI * 2);
@@ -27,15 +24,6 @@ export function markTexture(name: string, flagged: boolean, px = 256): THREE.Can
     ctx.closePath();
   }
   ctx.fill();
-  ctx.save();
-  ctx.clip();
-  ctx.strokeStyle = "rgba(255,255,255,0.14)";
-  ctx.lineWidth = 6;
-  ctx.beginPath();
-  ctx.moveTo(8, 31);
-  ctx.lineTo(32, 9);
-  ctx.stroke();
-  ctx.restore();
   ctx.fillStyle = "#ffffff";
   ctx.font = `700 ${text.length > 1 ? 14 : 17}px ${pageFont()}`;
   ctx.textAlign = "center";

@@ -155,14 +155,6 @@ function flagSprite(code: string, alive: () => boolean, stage: Stage): THREE.Spr
   return s;
 }
 
-const ATMOSPHERE = {
-  vertexShader: `varying vec3 vN; varying vec3 vV;
-    void main() { vec4 mv = modelViewMatrix * vec4(position, 1.0); vN = normalize(normalMatrix * normal); vV = normalize(-mv.xyz);
-      gl_Position = projectionMatrix * mv; }`,
-  fragmentShader: `uniform vec3 color; uniform float strength; varying vec3 vN; varying vec3 vV;
-    void main() { float k = clamp(-dot(vN, vV) / 0.5, 0.0, 1.0); gl_FragColor = vec4(color, pow(k, 2.2) * strength); }`,
-};
-
 const UNIT_SPHERE = new THREE.Sphere(new THREE.Vector3(), 1);
 const HIT = new THREE.Vector3();
 const RADIUS: Record<CorridorMode, number> = { sea: 0.0042, rail: 0.0046, road: 0.0038, air: 0.0034 };
@@ -250,13 +242,6 @@ export function Globe3D({ exporter, exporterName, intermediary, intermediaryName
     const sun = new THREE.DirectionalLight(0xffffff, dark ? 1.25 : 0.95);
     sun.position.set(-1.6, 1.8, 2.4);
     stage.camera.add(sun);
-    const halo = new THREE.Mesh(new THREE.SphereGeometry(1.13, 96, 64), new THREE.ShaderMaterial({
-      ...ATMOSPHERE,
-      uniforms: { color: { value: new THREE.Color(dark ? "#3987e5" : "#2a78d6") }, strength: { value: dark ? 0.55 : 0.32 } },
-      side: THREE.BackSide, transparent: true, depthWrite: false,
-    }));
-    g.add(halo);
-
     const picks: THREE.Object3D[] = [];
     const codes = [...INTERMEDIARY_CODES, "RU", exporter];
     for (const code of codes) {

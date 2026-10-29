@@ -131,7 +131,7 @@ export function CorridorPanel({ exporter, exporterName, intermediary, intermedia
           if (!items.length) return null;
           return (
             <div key={g.leg}>
-              <h3 className="mb-2 flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+              <h3 className="mb-2 flex items-center gap-1.5 text-[14px] font-bold">
                 {g.leg === "inbound" && <Flag code={exporter} size={14} />}
                 {g.leg === "onward" && <Flag code={intermediary} size={14} />}
                 {g.leg === "restricted" && <ProhibitIcon className="size-3.5 text-destructive" />}

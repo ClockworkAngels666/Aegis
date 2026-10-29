@@ -37,7 +37,7 @@ function graph(e: Entity, company: string, jurisdiction: string | null) {
     const id = `s:${i}`;
     const isCompany = s.role === "Company";
     add({ id, kind: isCompany ? "company" : "person", label: s.name, size: isCompany ? 0.56 : 0.42, pinned: isCompany, flagged: s.status !== "CLEAN",
-      info: <><div className="text-[10px] uppercase tracking-wider text-faint">{s.role}</div><div className="font-bold">{s.name}</div>
+      info: <><div className="text-[12px] text-faint">{s.role}</div><div className="font-bold">{s.name}</div>
         <div className="mt-1"><StatusBadge tone={entityTone[s.status]}>{s.status}{s.status !== "CLEAN" && ` · ${s.best_score.toFixed(0)}%`}</StatusBadge></div></> });
     if (!isCompany) edges.push({ a: "s:0", b: id, kind: "owner" });
     HUBS.forEach((h) => edges.push({ a: id, b: `hub:${h.id}`, kind: "screened" }));
@@ -45,7 +45,7 @@ function graph(e: Entity, company: string, jurisdiction: string | null) {
       const mid = `m:${m.id}`;
       if (!nodes.some((n) => n.id === mid)) {
         add({ id: mid, kind: "match", label: m.name, size: 0.34, flagged: true, url: m.url, individual: m.kind === "P",
-          info: <><div className="text-[10px] uppercase tracking-wider text-faint">Listed {m.kind === "P" ? "person" : "entity"}</div>
+          info: <><div className="text-[12px] text-faint">Listed {m.kind === "P" ? "person" : "entity"}</div>
             <div className="font-bold">{m.name}</div>
             <div>{m.lists.join(" · ")}{m.program && ` · ${m.program}`}</div>
             {m.countries.length > 0 && <div className="flex items-center gap-1">{m.countries.map((c) => <Flag key={c} code={c} size={14} />)} {m.countries.map((c) => regionName(c)).join(", ")}</div>}

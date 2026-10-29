@@ -21,7 +21,7 @@ export function Panel({
   tour?: string;
 }) {
   return (
-    <Card data-tour={tour} className={cn("gap-0 py-0 shadow-[0_1px_2px_rgba(16,24,40,0.05)] ring-border", className)}>
+    <Card data-tour={tour} className={cn("gap-0 py-0 ring-0 border border-border", className)}>
       <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2 border-b border-border px-4 py-3">
         <div className="min-w-0">
           <h2 className="text-[15px] font-bold leading-tight text-foreground">{title}</h2>

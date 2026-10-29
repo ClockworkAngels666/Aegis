@@ -1,7 +1,7 @@
 "use client";
 
 import { CheckCircleIcon, InfoIcon, WarningIcon, WarningOctagonIcon } from "@phosphor-icons/react";
-import type { ReactNode } from "react";
+import { Children, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { type Tone, toneVar } from "@/lib/format";
 
@@ -18,13 +18,21 @@ export function ToneIcon({ tone, className }: { tone: Tone; className?: string }
   return <Icon weight="fill" className={cn("shrink-0", className)} style={{ color: toneVar[tone] }} aria-hidden />;
 }
 
+/** API codes such as "RED FLAG" read as "Red flag"; mixed-case text ("Tier 3.B") is left alone. */
+function sentenceCase(node: ReactNode): ReactNode {
+  if (typeof node !== "string" || node !== node.toUpperCase() || !/[A-Z]{2}/.test(node)) return node;
+  const lower = node.toLowerCase();
+  const i = lower.search(/[a-z]/);
+  return lower.slice(0, i) + lower[i].toUpperCase() + lower.slice(i + 1);
+}
+
 /** Status is never colour alone: icon + label, text stays in ink. */
 export function StatusBadge({ tone, children, className }: { tone: Tone; children: ReactNode; className?: string }) {
   const c = toneVar[tone];
   return (
     <span
       className={cn(
-        "inline-flex h-6 shrink-0 items-center gap-1.5 whitespace-nowrap border px-2 text-[11px] font-semibold uppercase tracking-wider text-foreground",
+        "inline-flex h-6 shrink-0 items-center gap-1.5 whitespace-nowrap border px-2 text-[13px] font-semibold text-foreground",
         className,
       )}
       style={{
@@ -33,7 +41,7 @@ export function StatusBadge({ tone, children, className }: { tone: Tone; childre
       }}
     >
       <ToneIcon tone={tone} className="size-3.5" />
-      {children}
+      {Children.map(children, sentenceCase)}
     </span>
   );
 }
