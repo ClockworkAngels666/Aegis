@@ -25,7 +25,7 @@ export function MethodologyDialog({ reference }: { reference: Reference | null }
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="sm"><BookOpenIcon /> <span className="max-sm:hidden">Methodology</span></Button>
+        <Button variant="ghost" size="sm"><BookOpenIcon /> <span className="max-sm:sr-only">Methodology</span></Button>
       </DialogTrigger>
       <DialogContent className="max-h-[88vh] overflow-y-auto sm:max-w-3xl">
         <DialogHeader>
@@ -39,7 +39,7 @@ export function MethodologyDialog({ reference }: { reference: Reference | null }
           <H>Route risk vs sanctions screening</H>
           <p>
             The two scores answer different questions and are never blended. <b>Route risk</b> asks whether exports of
-            this HS code from the EU exporter to this country behave abnormally since 2022. <b>Entity risk</b> asks
+            this HS code from the EU exporter to this country behave abnormally since 2022. <b>Sanctions screening</b> asks
             whether this buyer or its owners resemble a listed party. A country-level surge shows that a corridor is
             being used, not that a given buyer is involved; reading it as proof about one company would be an
             ecological fallacy. Free customs microdata (bills of lading) does not exist, so this gap cannot be closed with
@@ -64,7 +64,7 @@ export function MethodologyDialog({ reference }: { reference: Reference | null }
             baseline and are scored without statistical components.
           </p>
 
-          <H>Transshipment risk score (0–100)</H>
+          <H>Route risk (0–100)</H>
           <table className="w-full text-[12px]">
             <tbody>
               {Object.entries(reference?.weights ?? {}).map(([k, w]) => (

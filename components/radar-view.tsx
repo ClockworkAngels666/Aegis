@@ -72,7 +72,7 @@ const Heatmap = memo(function Heatmap({ rows, partners, onHover, onAssess }: {
                   <ProductArt hs={r.hs} size={24} />
                   <div className="min-w-0">
                     <div className="font-bold tabular">{r.hs} <span className="font-normal text-faint">Tier {r.tier}</span></div>
-                    <div className="max-w-[180px] truncate text-[11px] text-muted-foreground">{r.description}</div>
+                    <div className="max-w-[180px] truncate text-[12px] text-muted-foreground">{r.description}</div>
                   </div>
                 </div>
               </th>
@@ -104,7 +104,9 @@ export function RadarView({ onAssess }: { onAssess: (hs: string, partner: string
   const [attempt, setAttempt] = useState(0);
   const [sort, setSort] = useState<"tier" | "risk">("tier");
   const [hover, setHover] = useState<Hovered | null>(null);
-  const [mode, setMode] = usePersisted<"3d" | "heatmap">("aegis-radar-view", "3d", ["3d", "heatmap"]);
+  // Touch screens get the heatmap first: the 3D skyline needs hover to read
+  const touch = typeof window !== "undefined" && window.matchMedia("(hover: none)").matches;
+  const [mode, setMode] = usePersisted<"3d" | "heatmap">("aegis-radar-view", touch ? "heatmap" : "3d", ["3d", "heatmap"]);
 
   useEffect(() => {
     let live = true;
@@ -157,7 +159,7 @@ export function RadarView({ onAssess }: { onAssess: (hs: string, partner: string
             ))}
           </div>
 
-          <Panel title="Highest-risk corridors" subtitle={`${data.exporter_name}, ranked by route score.`}>
+          <Panel title="Highest-risk corridors" subtitle={`${data.exporter_name}, ranked by route risk.`}>
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {data.top.slice(0, 9).map((c) => (
                 <button key={c.hs + c.partner} type="button" onClick={() => onAssess(c.hs, c.partner, exporter)}
@@ -173,8 +175,10 @@ export function RadarView({ onAssess }: { onAssess: (hs: string, partner: string
                       <span>{c.multiplier !== null ? `${times(c.multiplier)} pre-war` : c.emergent ? "new flow" : ""}</span>
                       {c.ytd !== null && <span className="text-muted-foreground">this year {times(c.ytd)}</span>}
                     </div>
+                    {Math.max(c.multiplier ?? 0, c.ytd ?? 0) >= 20 && (
+                      <div className="mt-0.5 text-[12px] text-muted-foreground">Small pre-war base: the multiple overstates the volume.</div>
+                    )}
                   </div>
-                  <Spark values={c.spark} w={64} />
                 </button>
               ))}
             </div>
@@ -182,7 +186,7 @@ export function RadarView({ onAssess }: { onAssess: (hs: string, partner: string
 
           <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
             <Panel title="All corridors" tour="skyline" bodyClassName={mode === "heatmap" ? "p-0" : undefined}
-              subtitle={mode === "3d" ? "Bar height and colour show the route score. Hover for details, click to assess." : "Darker cells have a higher route score. Click a cell to assess."}
+              subtitle={mode === "3d" ? "Bar height and colour show the route risk. Hover for details, click to assess." : "Stronger colour means a higher route risk. Click a cell to assess."}
               action={<>
                 <Segmented value={sort} onChange={setSort} options={[{ value: "tier", label: "By tier" }, { value: "risk", label: "By risk" }]} />
                 <Segmented value={mode} onChange={setMode} options={[
@@ -196,7 +200,7 @@ export function RadarView({ onAssess }: { onAssess: (hs: string, partner: string
                 <>
                   <Heatmap rows={rows} partners={data.partners} onHover={setHover} onAssess={assess} />
                   <div className="flex items-center gap-2 border-t border-border px-3 py-2 text-[12px] text-muted-foreground">
-                    Route score 0
+                    Route risk 0
                     <span className="h-2.5 w-40" style={{ background: "linear-gradient(90deg, color-mix(in srgb, var(--status-critical) 4%, var(--card)), var(--status-critical))" }} />
                     100
                   </div>

@@ -193,7 +193,7 @@ export function Terrain3D({ m, partner }: { m: Monthly; partner: string }) {
       setTip(tipAt(e, stage, (
         <>
           <div className="font-bold">{monthLabel(d.mo)}</div>
-          <div>{partner}: {money(d.value, m.unit, 2)}{d.z !== null && <span className="text-muted-foreground"> · Z {zfmt(d.z)}</span>}</div>
+          <div>{partner}: {money(d.value, m.unit, 2)}{d.z !== null && <span className="text-muted-foreground"> · {zfmt(d.z)} standard deviations from the pre-war average</span>}</div>
           {d.russia !== null && <div>Russia (direct): {money(d.russia, m.unit, 2)}</div>}
           <div className="text-muted-foreground">
             {d.pre ? "Pre-war baseline month" : d.flagged ? "Above the pre-war range" : "Within the pre-war range"}
@@ -216,7 +216,7 @@ export function Terrain3D({ m, partner }: { m: Monthly; partner: string }) {
         <span className="inline-flex items-center gap-1.5"><span className="size-2.5" style={{ background: "var(--series-1)" }} />{partner}</span>
         <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 border-t-[3px]" style={{ borderColor: "var(--status-critical)", background: "var(--series-1)" }} />Red cap: above the pre-war range</span>
         {hasRussia && showRussia && <span className="inline-flex items-center gap-1.5"><span className="size-2.5" style={{ background: "var(--series-2)" }} />Russia (direct)</span>}
-        <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-4 border" style={{ borderColor: "var(--status-warning)", background: "color-mix(in srgb, var(--status-warning) 22%, transparent)" }} />Pre-war range (average + 2σ)</span>
+        <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-4 border" style={{ borderColor: "var(--status-warning)", background: "color-mix(in srgb, var(--status-warning) 22%, transparent)" }} />Pre-war range</span>
         <span className="inline-flex items-center gap-1.5"><span className="size-2.5 border-2" style={{ borderColor: "var(--status-critical)" }} />February 2022</span>
       </div>
     </div>

@@ -1,8 +1,10 @@
 "use client";
 
 /* The Trade route tab: charts and statistics. Loaded on demand, together with the chart library. */
-import { CalculatorIcon } from "@phosphor-icons/react";
+import { CalculatorIcon, ChartBarIcon, CubeIcon } from "@phosphor-icons/react";
+import { useState } from "react";
 import { lazy3D } from "@/components/three/lazy";
+import { Segmented } from "@/components/corridor-panel";
 import { MirrorPanel, MonthlyPanel, PricePanel } from "@/components/analysis-panels";
 import { FlowDiagram } from "@/components/flow-diagram";
 import { Panel } from "@/components/panel";
@@ -31,10 +33,11 @@ export function RouteSection({ a, reference, onWeights, onCalculator }: {
 }) {
   const partner = a.query.intermediary_name;
   const exporterName = a.query.exporter_name;
+  const [monthlyView, setMonthlyView] = useState<"chart" | "3d">("chart");
   return (
     <>
       <Panel title="Annual exports" tour="exports"
-        subtitle={`HS ${a.classification.hs}, ${exporterName} to ${partner}. Source: ${a.series.source}, ${MODE_LABEL[a.series.mode] ?? a.series.mode}.`}>
+        subtitle={`HS ${a.classification.hs}, ${exporterName} to ${partner}, in ${a.series.unit}. Source: ${a.series.source}, ${MODE_LABEL[a.series.mode] ?? a.series.mode}.`}>
         {a.series.warning && <p className="mb-3 text-[13px] text-warning-ink">{a.series.warning}</p>}
         {a.route.points.length === 0 ? (
           <p className="py-10 text-center text-sm text-muted-foreground">No trade data for this combination.</p>
@@ -61,7 +64,7 @@ export function RouteSection({ a, reference, onWeights, onCalculator }: {
       </Panel>
 
       <div className="grid gap-4 xl:grid-cols-[1fr_1.3fr]">
-        <Panel title="Route score breakdown" subtitle="How the 0–100 route score is built. Weights can be changed." tour="score">
+        <Panel title="Route risk breakdown" subtitle="How the 0–100 route risk is built. Weights can be changed." tour="score">
           <ScoreBreakdown r={a.route} defaults={reference?.weights ?? {}} onWeights={onWeights} />
           <Button variant="outline" size="sm" className="mt-4 w-full" onClick={onCalculator}>
             <CalculatorIcon /> Try other figures in the calculator
@@ -78,30 +81,40 @@ export function RouteSection({ a, reference, onWeights, onCalculator }: {
       </div>
 
       <Panel title="Monthly exports" tour="monthly"
-        subtitle={a.monthly ? `Eurostat monthly data, ${monthLabel(a.monthly.months[0])} to ${monthLabel(a.monthly.latest)}.` : undefined}>
-        <MonthlyPanel m={a.monthly} />
+        subtitle={a.monthly ? `Eurostat monthly data in ${a.monthly.unit}, ${monthLabel(a.monthly.months[0])} to ${monthLabel(a.monthly.latest)}.${monthlyView === "3d" ? " One row per year; bars above the yellow plane exceed the pre-war range." : ""}` : undefined}
+        action={a.monthly && <Segmented value={monthlyView} onChange={setMonthlyView} options={[
+          { value: "chart", label: "Chart", icon: <ChartBarIcon className="size-4" /> },
+          { value: "3d", label: "3D", icon: <CubeIcon className="size-4" /> },
+        ]} />}>
+        {monthlyView === "3d" && a.monthly ? <Terrain3D m={a.monthly} partner={partner} /> : <MonthlyPanel m={a.monthly} />}
       </Panel>
-      {a.monthly && (
-        <Panel title="Monthly exports by year (3D)" subtitle="One row per year. Bars above the yellow plane exceed the pre-war range." tour="terrain">
-          <Terrain3D m={a.monthly} partner={partner} />
-        </Panel>
-      )}
 
-      <div className="grid gap-4 xl:grid-cols-[1fr_1.4fr]">
-        <Panel title="Price per kg" subtitle="Export value divided by net weight, before and after 2022.">
-          <PricePanel u={a.unit_values} unit={a.series.unit} />
-        </Panel>
-        <Panel title="Mirror check" subtitle={`What ${partner} itself reports to UN Comtrade.`} tour="mirror">
-          <MirrorPanel m={a.mirror} partner={partner} partnerCode={a.query.intermediary} />
-        </Panel>
-      </div>
-
-      {a.sankey && (
-        <Panel title="Flows through all intermediaries" tour="flows"
-          subtitle={`${exporterName}'s exports of this item to each country, and each country's exports of it to Russia.`}>
-          <FlowDiagram s={a.sankey} exporterName={exporterName} hs={a.classification.hs} highlight={a.query.intermediary} />
-        </Panel>
-      )}
+      <Panel title="Cross-checks" subtitle="Other sources that can confirm or question the export figures above." tour="mirror">
+        <Tabs defaultValue="mirror">
+          <TabsList className="mb-3 h-auto flex-wrap justify-start">
+            <TabsTrigger value="mirror" className="px-2.5 text-[13px]">Mirror check</TabsTrigger>
+            <TabsTrigger value="price" className="px-2.5 text-[13px]">Price per kg</TabsTrigger>
+            {a.sankey && <TabsTrigger value="flows" className="px-2.5 text-[13px]">All intermediaries</TabsTrigger>}
+          </TabsList>
+          <TabsContent value="mirror">
+            <p className="mb-3 text-[13px] text-muted-foreground">What {partner} itself reports to UN Comtrade, in USD.</p>
+            <MirrorPanel m={a.mirror} partner={partner} partnerCode={a.query.intermediary} />
+          </TabsContent>
+          <TabsContent value="price">
+            <p className="mb-3 text-[13px] text-muted-foreground">Export value divided by net weight, before and after 2022.</p>
+            <PricePanel u={a.unit_values} unit={a.series.unit} />
+          </TabsContent>
+          {a.sankey && (
+            <TabsContent value="flows">
+              <p className="mb-3 text-[13px] text-muted-foreground">
+                {exporterName}&apos;s exports of this item to each country, and each country&apos;s exports of it to Russia
+                ({a.sankey.year}, {a.sankey.unit}).
+              </p>
+              <FlowDiagram s={a.sankey} exporterName={exporterName} hs={a.classification.hs} highlight={a.query.intermediary} />
+            </TabsContent>
+          )}
+        </Tabs>
+      </Panel>
     </>
   );
 }

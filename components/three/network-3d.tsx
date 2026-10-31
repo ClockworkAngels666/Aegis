@@ -241,7 +241,7 @@ export function Network3D({ e, company, jurisdiction }: { e: Entity; company: st
               <div key={n.id} ref={(el) => {
                 if (el) labelEls.current.set(n.id, el);
                 else labelEls.current.delete(n.id);
-              }} className={`absolute left-0 top-0 max-w-[150px] truncate text-center opacity-0 [text-shadow:0_0_3px_var(--card),0_0_3px_var(--card)] ${n.kind === "match" ? "text-[11px] text-muted-foreground" : "text-[12px] font-bold text-foreground"} ${n.kind === "hub" ? "max-sm:hidden" : ""}`}>
+              }} className={`absolute left-0 top-0 max-w-[150px] truncate text-center opacity-0 [text-shadow:0_0_3px_var(--card),0_0_3px_var(--card)] ${n.kind === "match" ? "text-[12px] text-muted-foreground" : "text-[12px] font-bold text-foreground"} ${n.kind === "hub" ? "max-sm:hidden" : ""}`}>
                 {n.kind === "hub" ? HUBS.find((h) => `hub:${h.id}` === n.id)?.full : n.label}
               </div>
             ))}

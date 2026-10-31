@@ -248,7 +248,8 @@ export function CorridorMap({ exporter, exporterName, intermediary, intermediary
             const x = x0 + (m.offset?.[0] ?? 0) - w / 2;
             const y = y0 + (m.offset?.[1] ?? 0) - h / 2;
             return (
-              <g key={code} className="cursor-pointer" onClick={() => onSelect(code)} role="button"
+              <g key={code} className="cursor-pointer" onClick={() => onSelect(code)} role="button" tabIndex={0}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(code); } }}
                 aria-label={`Assess ${regionName(code)}`}>
                 <title>{`${regionName(code)}: click to assess this corridor`}</title>
                 <rect x={x - 1.5} y={y - 1.5} width={w + 3} height={h + 3} rx={2} fill="#fff"

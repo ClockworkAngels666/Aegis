@@ -142,8 +142,7 @@ export function CorridorPanel({ exporter, exporterName, intermediary, intermedia
                   const Icon = MODE_ICON[r.mode];
                   return (
                     <li key={r.id} onMouseEnter={() => setHover(r.id)} onMouseLeave={() => setHover(null)}
-                      className={cn("flex gap-2.5 border-l-2 py-0.5 pl-2.5 transition-colors", hover === r.id && "bg-muted")}
-                      style={{ borderColor: LEG_COLOR[r.leg] }}>
+                      className={cn("flex gap-2.5 py-0.5 transition-colors", hover === r.id && "bg-muted")}>
                       <Icon weight="duotone" className="mt-0.5 size-4 shrink-0" style={{ color: LEG_COLOR[r.leg] }} />
                       <div className="text-[13px] leading-snug">
                         <div className="font-bold">{r.name}</div>

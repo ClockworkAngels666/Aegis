@@ -366,7 +366,7 @@ export function Diorama3D({ a }: { a: Assessment }) {
     ] });
     pick(buy, { title: <>{q.company}</>, lines: [
       `${regionName(buyerCountry)}${buyerCountry === q.intermediary ? " · buyer" : ` · via ${q.intermediary_name}`}`,
-      `Sanctions screen: ${entity.status}${flagged ? ` (${entity.best_score.toFixed(0)}% similarity)` : ""}`,
+      `Sanctions screening: ${entity.status === "CLEAN" ? "no match" : entity.status.toLowerCase()}${flagged ? ` (${entity.best_score.toFixed(0)}% similarity)` : ""}`,
       "Company mark is generated, not a real logo",
     ] });
     pick(ru, { title: <>Russia · sanctioned destination</>, lines: [

@@ -123,7 +123,7 @@ export function RiskCube3D({ rows, onAssess }: { rows: BatchRowOut[]; onAssess?:
     g.add(left);
     const back = textPlane([
       ...[0, 25, 50, 75, 100].map((s) => ({ text: String(s), x: 0.62, y: 0.1 + H - yOf(s), size: 0.11, align: "right" as const })),
-      { text: "Route score ↑", x: 0.17, y: 0.1 + H / 2, size: 0.13, bold: true, align: "center", rotate: -Math.PI / 2 },
+      { text: "Route risk ↑", x: 0.17, y: 0.1 + H / 2, size: 0.13, bold: true, align: "center", rotate: -Math.PI / 2 },
     ], 0.7, H + 0.2);
     back.position.set(-W / 2 - 0.35, H / 2, -D / 2);
     g.add(back);
@@ -206,7 +206,7 @@ export function RiskCube3D({ rows, onAssess }: { rows: BatchRowOut[]; onAssess?:
 
   return (
     <Frame3D hostRef={hostRef} stageRef={stageRef} failed={failed} tip={tip} className="h-[360px] bg-card sm:h-[440px]"
-      label={`3D scatter of ${rows.length} screened counterparties by sanctions-match score, route score and item tier`}
+      label={`3D scatter of ${rows.length} screened counterparties by sanctions-match score, route risk and item tier`}
       hint="Drag to rotate · right-drag to pan · Ctrl + scroll to zoom"
       overlay={labelled && (
         <div className="pointer-events-none absolute inset-0 overflow-hidden">

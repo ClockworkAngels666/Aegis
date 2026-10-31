@@ -11,7 +11,7 @@ import { ProductArt } from "@/components/product-art";
 import { StatusBadge } from "@/components/status";
 import { CompanyMark, Flag } from "@/components/visuals";
 import { api } from "@/lib/api";
-import { bandTone, entityTone, verdictTone } from "@/lib/format";
+import { bandTone, entityTone, verdictSolid, verdictTone } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { BatchResult, BatchRowIn, BatchRowOut, VerdictCode } from "@/lib/types";
 
@@ -27,8 +27,38 @@ Wide World Importers,AM,854232,AM
 Tailspin Toys GmbH,DE,950300,
 Kalashnikov Concern,RU,,`;
 
-/** Minimal CSV parser: commas, quoted fields, optional header row. */
-function parseCsv(text: string): BatchRowIn[] {
+function SanctionsCell({ r }: { r: BatchRowOut }) {
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <StatusBadge tone={entityTone[r.entity_status]}>{r.entity_status === "CLEAN" ? "No match" : r.entity_status}</StatusBadge>
+      {r.best_match && r.entity_status !== "CLEAN" && (
+        <span className="text-muted-foreground">{r.best_match} · {r.best_lists.join(", ")} · {r.best_similarity?.toFixed(0)}%</span>
+      )}
+    </div>
+  );
+}
+
+function ItemCell({ r }: { r: BatchRowOut }) {
+  return r.hs ? (
+    <div className="flex items-center gap-2">
+      <ProductArt hs={r.hs} size={24} />
+      <span className="tabular">{r.hs}</span>
+      <span className="text-muted-foreground">{r.chpl_tier ? `Tier ${r.chpl_tier}` : "not listed"}</span>
+    </div>
+  ) : <span className="text-faint">—</span>;
+}
+
+function RouteCell({ r }: { r: BatchRowOut }) {
+  return r.route_score !== null && r.route_band && r.intermediary ? (
+    <div className="flex items-center gap-2">
+      <Flag code={r.intermediary} size={14} />
+      <StatusBadge tone={bandTone[r.route_band]}>{r.route_score}</StatusBadge>
+    </div>
+  ) : <span className="text-faint">—</span>;
+}
+
+/** Minimal CSV parser: commas, quoted fields, optional header row. Counts the rows it leaves out. */
+function parseCsv(text: string): { rows: BatchRowIn[]; short: number; extra: number } {
   const rows: string[][] = [];
   for (const line of text.split(/\r?\n/)) {
     if (!line.trim()) continue;
@@ -45,15 +75,15 @@ function parseCsv(text: string): BatchRowIn[] {
     cells.push(cur.trim());
     rows.push(cells);
   }
-  if (!rows.length) return [];
+  if (!rows.length) return { rows: [], short: 0, extra: 0 };
   const header = rows[0].map((h) => h.toLowerCase());
   const hasHeader = header.includes("company");
   const idx = (name: string, fallback: number) => (hasHeader ? header.indexOf(name) : fallback);
   const [ci, co, hs, im] = [idx("company", 0), idx("country", 1), idx("hs", 2), idx("intermediary", 3)];
-  return (hasHeader ? rows.slice(1) : rows)
-    .map((r) => ({ company: r[ci] ?? "", country: co >= 0 ? r[co] : undefined, hs: hs >= 0 ? r[hs] : undefined, intermediary: im >= 0 ? r[im] : undefined }))
-    .filter((r) => r.company.length >= 2)
-    .slice(0, 200);
+  const all = (hasHeader ? rows.slice(1) : rows)
+    .map((r) => ({ company: r[ci] ?? "", country: co >= 0 ? r[co] : undefined, hs: hs >= 0 ? r[hs] : undefined, intermediary: im >= 0 ? r[im] : undefined }));
+  const named = all.filter((r) => r.company.length >= 2);
+  return { rows: named.slice(0, 200), short: all.length - named.length, extra: Math.max(0, named.length - 200) };
 }
 
 function toCsv(result: BatchResult): string {
@@ -87,7 +117,7 @@ export function BatchView({ state, onState, onAssess }: {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const file = useRef<HTMLInputElement>(null);
-  const rows = parseCsv(text);
+  const { rows, short, extra } = parseCsv(text);
 
   const run = async () => {
     setLoading(true);
@@ -116,7 +146,13 @@ export function BatchView({ state, onState, onAssess }: {
       <Panel title="Counterparties" subtitle={<>CSV columns: <b>company</b> (required), country, hs, intermediary. Paste below or upload a file.</>}>
         <textarea value={text} onChange={(e) => setText(e.target.value)} rows={8} spellCheck={false}
           placeholder="company,country,hs,intermediary" aria-label="Counterparties as CSV"
-          className="w-full resize-y border border-input bg-transparent px-3 py-2 text-[13px] tabular outline-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring/50" />
+          className="w-full resize-y border border-input bg-transparent px-3 py-2 text-[13px] tabular outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring/50" />
+        {(short > 0 || extra > 0) && (
+          <p className="mt-2 text-[13px] text-muted-foreground" role="status">
+            {extra > 0 && `Only the first 200 rows are screened; ${extra} more ${extra === 1 ? "was" : "were"} left out. `}
+            {short > 0 && `${short} row${short === 1 ? " has" : "s have"} no company name of at least 2 characters and ${short === 1 ? "is" : "are"} skipped.`}
+          </p>
+        )}
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <input ref={file} type="file" accept=".csv,text/csv,text/plain" className="hidden"
             onChange={async (e) => { const f = e.target.files?.[0]; if (f) setText(await f.text()); e.target.value = ""; }} />
@@ -145,7 +181,7 @@ export function BatchView({ state, onState, onAssess }: {
               <button key={k} type="button" onClick={() => setOnly(only === k ? null : k)} aria-pressed={only === k}
                 title={only === k ? "Show all rows" : `Show only ${k}`}
                 className={cn("transition-opacity", only && only !== k && "opacity-40 hover:opacity-80")}>
-                <StatusBadge tone={verdictTone[k]}>{result.summary[k]} {k}</StatusBadge>
+                <StatusBadge tone={verdictTone[k]} solid={verdictSolid(k)}>{`${result.summary[k]} ${k}`}</StatusBadge>
               </button>
             ))}
             {only && (
@@ -158,27 +194,52 @@ export function BatchView({ state, onState, onAssess }: {
             <>
               <RiskCube3D rows={shown} onAssess={onAssess} />
               <p className="mt-2 text-[13px] text-muted-foreground">
-                Left to right: sanctions-match score. Up: route score. Front to back: item tier. Diamonds have a sanctions
-                match; shaded slabs mark the STOP and HOLD zones.
+                Left to right: sanctions-match score. Up: route risk. Front to back: item tier. Diamonds have a sanctions
+                match; shaded slabs mark the Stop and Hold zones.
               </p>
             </>
           ) : (
-          <div className="overflow-x-auto">
+          <>
+          <ul className="divide-y divide-border border-y border-border md:hidden">
+            {shown.map((r, i) => (
+              <li key={i} className="space-y-2 py-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <CompanyMark name={r.company} size={24} flagged={r.entity_status !== "CLEAN"} />
+                    <span className="truncate font-bold">{r.company}</span>
+                    {r.country && <Flag code={r.country} size={14} />}
+                  </div>
+                  <StatusBadge tone={verdictTone[r.verdict]} solid={verdictSolid(r.verdict)}>{r.verdict}</StatusBadge>
+                </div>
+                <dl className="grid grid-cols-[5.5rem_minmax(0,1fr)] gap-x-3 gap-y-1.5 text-[13px]">
+                  <dt className="text-muted-foreground">Sanctions</dt><dd><SanctionsCell r={r} /></dd>
+                  <dt className="text-muted-foreground">Item</dt><dd><ItemCell r={r} /></dd>
+                  <dt className="text-muted-foreground">Route risk</dt><dd><RouteCell r={r} /></dd>
+                </dl>
+                {onAssess && (
+                  <Button size="xs" variant="outline" onClick={() => onAssess(r)} aria-label={`Open the assessment of ${r.company}`}>
+                    Assess <ArrowRightIcon />
+                  </Button>
+                )}
+              </li>
+            ))}
+          </ul>
+          <div className="overflow-x-auto max-md:hidden">
             <Table className="text-[13px]">
               <TableHeader>
                 <TableRow>
                   <TableHead>Action</TableHead>
                   <TableHead>Company</TableHead>
-                  <TableHead>Sanctions screen</TableHead>
+                  <TableHead>Sanctions screening</TableHead>
                   <TableHead>Item</TableHead>
-                  <TableHead>Route</TableHead>
+                  <TableHead>Route risk</TableHead>
                   {onAssess && <TableHead className="w-24"><span className="sr-only">Open</span></TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {shown.map((r, i) => (
                   <TableRow key={i}>
-                    <TableCell><StatusBadge tone={verdictTone[r.verdict]}>{r.verdict}</StatusBadge></TableCell>
+                    <TableCell><StatusBadge tone={verdictTone[r.verdict]} solid={verdictSolid(r.verdict)}>{r.verdict}</StatusBadge></TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <CompanyMark name={r.company} size={24} flagged={r.entity_status !== "CLEAN"} />
@@ -186,31 +247,9 @@ export function BatchView({ state, onState, onAssess }: {
                         {r.country && <Flag code={r.country} size={14} />}
                       </div>
                     </TableCell>
-                    <TableCell className="whitespace-normal">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <StatusBadge tone={entityTone[r.entity_status]}>{r.entity_status}</StatusBadge>
-                        {r.best_match && r.entity_status !== "CLEAN" && (
-                          <span className="text-muted-foreground">{r.best_match} · {r.best_lists.join(", ")} · {r.best_similarity?.toFixed(0)}%</span>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {r.hs ? (
-                        <div className="flex items-center gap-2">
-                          <ProductArt hs={r.hs} size={24} />
-                          <span className="tabular">{r.hs}</span>
-                          <span className="text-muted-foreground">{r.chpl_tier ? `Tier ${r.chpl_tier}` : "not listed"}</span>
-                        </div>
-                      ) : <span className="text-faint">—</span>}
-                    </TableCell>
-                    <TableCell>
-                      {r.route_score !== null && r.route_band && r.intermediary ? (
-                        <div className="flex items-center gap-2">
-                          <Flag code={r.intermediary} size={14} />
-                          <StatusBadge tone={bandTone[r.route_band]}>{r.route_score}</StatusBadge>
-                        </div>
-                      ) : <span className="text-faint">—</span>}
-                    </TableCell>
+                    <TableCell className="whitespace-normal"><SanctionsCell r={r} /></TableCell>
+                    <TableCell><ItemCell r={r} /></TableCell>
+                    <TableCell><RouteCell r={r} /></TableCell>
                     {onAssess && (
                       <TableCell className="text-right">
                         <Button size="xs" variant="ghost" onClick={() => onAssess(r)} aria-label={`Open the assessment of ${r.company}`}>
@@ -223,6 +262,7 @@ export function BatchView({ state, onState, onAssess }: {
               </TableBody>
             </Table>
           </div>
+          </>
           )}
         </Panel>
       )}

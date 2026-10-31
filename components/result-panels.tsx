@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Panel } from "@/components/panel";
-import { StatusBadge, ToneIcon } from "@/components/status";
+import { StatusBadge, ToneIcon, sentenceCase } from "@/components/status";
 import { CompanyMark, Flag } from "@/components/visuals";
 import { ProductArt } from "@/components/product-art";
 import { RegistryLookup } from "@/components/registry-lookup";
@@ -27,7 +27,7 @@ export function LegalPanel({ c }: { c: Classification }) {
         </div>
         <StatusBadge tone={tone}>{c.chpl ? `Tier ${c.tier}` : c.status}</StatusBadge>
       </div>
-      {c.tier_label && <p className="mt-2 text-[11px] text-muted-foreground">{c.tier_label}</p>}
+      {c.tier_label && <p className="mt-2 text-[12px] text-muted-foreground">{c.tier_label}</p>}
       {c.annex_i_indicative.length > 0 && (
         <div className="mt-3 flex flex-wrap items-center gap-1.5">
           <span className="text-[12px] text-muted-foreground">Possible dual-use entries (Annex I)</span>
@@ -65,7 +65,7 @@ function SimilarityBar({ score }: { score: number }) {
 export function EntityPanel({ e, company, jurisdiction }: { e: Entity; company: string; jurisdiction: string | null }) {
   return (
     <Panel title="Sanctions screening" subtitle={`The buyer and its owners, checked against: ${e.lists.join(", ")}.`} tour="entity"
-      action={<span className="text-[11px] text-faint">{e.source}</span>}>
+      action={<span className="text-[12px] text-faint">{e.source}</span>}>
       <div className="space-y-4">
         {e.subjects.map((s) => (
           <div key={s.role + s.name}>
@@ -133,13 +133,13 @@ export function EntityPanel({ e, company, jurisdiction }: { e: Entity; company: 
                 </TableBody>
               </Table>
             ) : (
-              <p className="mt-1.5 text-[11px] text-muted-foreground">
+              <p className="mt-1.5 text-[12px] text-muted-foreground">
                 No listed name above 70% similarity.
               </p>
             )}
           </div>
         ))}
-        {e.warning && <p className="text-[11px] text-warning-ink">{e.warning}</p>}
+        {e.warning && <p className="text-[12px] text-warning-ink">{e.warning}</p>}
         <RegistryLookup name={company} country={jurisdiction} />
       </div>
     </Panel>
@@ -212,7 +212,7 @@ export function ScoreBreakdown({ r, defaults, onWeights }: {
           <span className="text-muted-foreground">With equal weights</span>
           <span className="inline-flex items-center gap-1.5 font-mono tabular">
             <ToneIcon tone={bandTone[sens.equal.band]} className="size-3.5" />
-            {sens.equal.score} {sens.equal.band}
+            {sens.equal.score} {sentenceCase(sens.equal.band)}
           </span>
         </div>
         {r.custom_weights && (
@@ -220,11 +220,11 @@ export function ScoreBreakdown({ r, defaults, onWeights }: {
             <span className="text-muted-foreground">Default weights</span>
             <span className="inline-flex items-center gap-1.5 font-mono tabular">
               <ToneIcon tone={bandTone[sens.default.band]} className="size-3.5" />
-              {sens.default.score} {sens.default.band}
+              {sens.default.score} {sentenceCase(sens.default.band)}
             </span>
           </div>
         )}
-        <p className="text-[11px] text-faint">
+        <p className="text-[12px] text-faint">
           {sens.equal.band === r.band ? "Same band with equal weights." : "The band changes with equal weights, so read it with care."}
         </p>
       </div>

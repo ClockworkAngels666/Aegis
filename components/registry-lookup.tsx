@@ -63,7 +63,7 @@ export function RegistryLookup({ name, country }: { name: string; country: strin
             </div>
           ))}
           {current.data.note && <p className="text-[13px] text-muted-foreground">{current.data.note}</p>}
-          <p className="text-[11px] text-faint">{current.data.source}</p>
+          <p className="text-[12px] text-faint">{current.data.source}</p>
         </div>
       )}
     </div>

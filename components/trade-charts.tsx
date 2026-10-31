@@ -21,13 +21,13 @@ import { Flag } from "@/components/visuals";
 import { money, pct, zfmt, moneyTick, niceTicks } from "@/lib/format";
 import type { Route, Unit } from "@/lib/types";
 
-const AXIS_TICK = { fill: "var(--muted-foreground)", fontSize: 11, fontFamily: "var(--font-sans)" };
+const AXIS_TICK = { fill: "var(--muted-foreground)", fontSize: 12, fontFamily: "var(--font-sans)" };
 
 type TipProps = { active?: boolean; payload?: ReadonlyArray<{ payload?: unknown }> };
 
 function Tip({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-w-44 border border-border bg-popover px-3 py-2 text-[11px] shadow-lg tabular">{children}</div>
+    <div className="min-w-44 border border-border bg-popover px-3 py-2 text-[12px] shadow-lg tabular">{children}</div>
   );
 }
 
@@ -60,17 +60,17 @@ export function AnomalyChart({ route, partner, unit }: { route: Route; partner: 
   const hasBand = baseline.std > 0 && baseline.mean > 0;
   const data = route.points.map((p) => ({ ...p }));
   const max = Math.max(...data.map((d) => d.value), hasBand ? baseline.upper : 0, 1);
-  const ticks = niceTicks(max * 1.1); // headroom for the Z labels above the bars
+  const ticks = niceTicks(max * 1.1); // headroom for the labels above flagged bars
   const [b0, b1] = [baseline.years[0], baseline.years[baseline.years.length - 1]];
 
   return (
     <div>
-      <div className="mb-3 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+      <div className="mb-3 flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-muted-foreground">
         <LegendKey color="var(--chart-baseline)" label={`${b0}–${String(b1).slice(2)} (baseline)`} />
         <LegendKey color="var(--series-1)" label="Since 2022" />
-        <LegendKey color="var(--status-critical)" label={`Unusual year (Z > ${route.threshold})`} />
+        <LegendKey color="var(--status-critical)" label={`Unusual year (over ${route.threshold} standard deviations)`} />
         {hasBand && <LegendKey color="var(--muted-foreground)" label="Baseline average" line />}
-        {hasBand && <LegendKey color="var(--status-warning)" label="Average + 2σ" line />}
+        {hasBand && <LegendKey color="var(--status-warning)" label="Pre-war range" line />}
       </div>
       <div className="h-[260px] w-full">
         <ResponsiveContainer width="100%" height="100%">
@@ -119,7 +119,7 @@ export function AnomalyChart({ route, partner, unit }: { route: Route; partner: 
                   if (!d?.flagged || width < 16) return null; // too narrow: tooltip and table carry it
                   return (
                     <text x={x + width / 2} y={y - 7} textAnchor="middle" fontSize={10} fill="var(--foreground)">
-                      {d.z !== null ? `Z ${zfmt(d.z)}` : "new"}
+                      {d.z !== null ? `${zfmt(d.z)} SD` : "new"}
                     </text>
                   );
                 }}
@@ -177,7 +177,7 @@ export function DisplacementChart({ route, partner, partnerCode, unit }: {
 
   return (
     <div>
-      <div className="mb-3 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+      <div className="mb-3 flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-muted-foreground">
         <LegendKey color="var(--series-1)" label={`Exports to ${partner}`} line flag={partnerCode} />
         <LegendKey color="var(--series-2)" label="Exports to Russia" line flag="RU" />
         <span>Index, baseline avg = 100 (log)</span>
@@ -225,7 +225,7 @@ export function DisplacementChart({ route, partner, partnerCode, unit }: {
 
 export function SeriesTable({ route, unit }: { route: Route; unit: Unit }) {
   return (
-    <Table className="tabular text-[11px]">
+    <Table className="tabular text-[12px]">
       <TableHeader>
         <TableRow>
           <TableHead>Year</TableHead>

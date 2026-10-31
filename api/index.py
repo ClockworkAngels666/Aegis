@@ -31,6 +31,8 @@ def _valid_hs(v: str) -> str:
     code = hs_codes.clean_hs(v)
     if not hs_codes.HS_PATTERN.match(code):
         raise ValueError("HS code must have 6 digits")
+    if not hs_codes.real_chapter(code):
+        raise ValueError("Not a valid HS code: chapters run from 01 to 97")
     return code
 
 
@@ -295,7 +297,7 @@ async def batch(req: BatchRequest) -> dict:
             "verdict": None,
         }
         hs = hs_codes.clean_hs(row.hs or "")
-        if hs_codes.HS_PATTERN.match(hs):
+        if hs_codes.HS_PATTERN.match(hs) and hs_codes.real_chapter(hs):
             c = hs_codes.classify(hs)
             result.update(hs=hs, chpl_tier=c["tier"])
             inter = (row.intermediary or cc or "").strip().upper()[:2]

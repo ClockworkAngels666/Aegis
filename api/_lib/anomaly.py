@@ -135,7 +135,7 @@ def analyse(series: dict, classification: dict, partner: str,
     elif emergent:
         note = "No exports in the 2017-2021 baseline: any post-2022 flow is a new trade relationship."
     elif not has_baseline:
-        note = "Too little baseline trade for a meaningful Z-score."
+        note = "Too little pre-war trade for a reliable comparison."
     else:
         note = None
 

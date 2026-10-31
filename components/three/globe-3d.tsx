@@ -508,7 +508,7 @@ export function Globe3D({ exporter, exporterName, intermediary, intermediaryName
             }}
               className={l.strong
                 ? "absolute left-0 top-0 whitespace-nowrap text-[13px] font-bold text-[var(--map-label)] opacity-0 transition-opacity duration-200 [text-shadow:0_0_3px_var(--map-halo),0_0_3px_var(--map-halo),0_0_2px_var(--map-halo)]"
-                : "absolute left-0 top-0 whitespace-nowrap text-[11px] text-[var(--map-label)] opacity-0 transition-opacity duration-200 [text-shadow:0_0_3px_var(--map-halo),0_0_2px_var(--map-halo)]"}>
+                : "absolute left-0 top-0 whitespace-nowrap text-[12px] text-[var(--map-label)] opacity-0 transition-opacity duration-200 [text-shadow:0_0_3px_var(--map-halo),0_0_2px_var(--map-halo)]"}>
               {l.text}
             </div>
           ))}

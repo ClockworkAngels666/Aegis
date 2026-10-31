@@ -31,7 +31,8 @@ export function readUrl(search: string): { form?: FormState; view?: View; sectio
   return { form, view, section };
 }
 
-export function writeUrl(a: Assessment | null, view: View, section: Section) {
+/** `push` adds a history entry, so Back returns to the previous view, tab or assessment. */
+export function writeUrl(a: Assessment | null, view: View, section: Section, push = true) {
   const p = new URLSearchParams();
   if (view !== "assess") p.set("view", view);
   if (a) {
@@ -46,5 +47,7 @@ export function writeUrl(a: Assessment | null, view: View, section: Section) {
   }
   if (view === "assess" && section !== "overview") p.set("tab", section);
   const next = `${window.location.pathname}${p.size ? `?${p}` : ""}`;
-  if (next !== `${window.location.pathname}${window.location.search}`) window.history.replaceState(window.history.state, "", next);
+  if (next === `${window.location.pathname}${window.location.search}`) return;
+  if (push) window.history.pushState(null, "", next);
+  else window.history.replaceState(window.history.state, "", next);
 }

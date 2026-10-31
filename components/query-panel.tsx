@@ -83,7 +83,12 @@ export function QueryPanel({ reference, form, setForm, onRun, loading, active }:
 }) {
   const set = (patch: Partial<FormState>) => setForm({ ...form, ...patch });
   const hsInfo = reference?.hs_codes.find((h) => h.hs === form.hs);
-  const hsValid = /^\d{6}$/.test(form.hs);
+  const sixDigits = /^\d{6}$/.test(form.hs);
+  // HS chapters run from 01 to 97 (77 is reserved); 98/99 are national or "not specified" codes
+  const realChapter = sixDigits && Number(form.hs.slice(0, 2)) >= 1 && Number(form.hs.slice(0, 2)) <= 97 && !form.hs.startsWith("77");
+  const hsValid = sixDigits && realChapter;
+  const blocked = form.company.trim().length < 2 ? "Enter a company name of at least 2 characters."
+    : !hsValid ? "Enter a valid six-digit HS code." : null;
   const submit = (e: FormEvent) => {
     e.preventDefault();
     if (form.company.trim().length >= 2 && hsValid) onRun(form);
@@ -135,7 +140,9 @@ export function QueryPanel({ reference, form, setForm, onRun, loading, active }:
 
         <h3 className="border-t border-border pt-4 text-[15px] font-bold">Shipment</h3>
         <Field label="HS code" htmlFor="hs"
-          hint={hsInfo ? <>Tier {hsInfo.tier} · {hsInfo.description}</> : hsValid ? "Not on the EU battlefield item list" : "Six digits"}>
+          hint={hsInfo ? <>Tier {hsInfo.tier} · {hsInfo.description}</> : !sixDigits ? "Six digits"
+            : !realChapter ? <span className="text-destructive">Not a valid HS code: chapters run from 01 to 97</span>
+            : "Not on the EU battlefield item list"}>
           <Input id="hs" list="hs-list" inputMode="numeric" value={form.hs} maxLength={6}
             onChange={(e) => set({ hs: e.target.value.replace(/\D/g, "").slice(0, 6) })} aria-invalid={!hsValid} />
           <datalist id="hs-list">
@@ -144,7 +151,7 @@ export function QueryPanel({ reference, form, setForm, onRun, loading, active }:
             ))}
           </datalist>
         </Field>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
           <Field label="Exporter" htmlFor="exporter">
             <Select value={form.exporter} onValueChange={(v) => set({ exporter: v })}>
               <SelectTrigger id="exporter" className="w-full"><SelectValue /></SelectTrigger>
@@ -179,10 +186,12 @@ export function QueryPanel({ reference, form, setForm, onRun, loading, active }:
           <Switch checked={form.live} onCheckedChange={(v) => set({ live: v })} aria-label="Live APIs: fetch fresh Eurostat data" />
         </label>
 
-        <Button type="submit" className="w-full" size="lg" disabled={loading || !hsValid || form.company.trim().length < 2}>
+        <Button type="submit" className="w-full" size="lg" disabled={loading || blocked !== null}
+          aria-describedby={blocked ? "run-blocked" : undefined}>
           {loading ? <SpinnerGapIcon className="animate-spin" /> : <CrosshairIcon />}
           {loading ? "Assessing…" : "Run assessment"}
         </Button>
+        {blocked && !loading && <p id="run-blocked" className="text-[12px] text-muted-foreground">{blocked}</p>}
       </form>
     </Panel>
   );

@@ -24,8 +24,13 @@ async function call<T>(path: string, init?: RequestInit): Promise<T> {
     res = await fetch(`/api${path}`, {
       ...init,
       headers: { "Content-Type": "application/json", ...init?.headers },
+      // Live data can take ~15 s (paced UN Comtrade calls); anything past 30 s is stuck
+      signal: AbortSignal.timeout(30_000),
     });
-  } catch {
+  } catch (e) {
+    if (e instanceof DOMException && e.name === "TimeoutError") {
+      throw new Error("The analysis service took too long to answer. Try again.");
+    }
     throw new ApiUnavailable();
   }
   if (!res.ok) {

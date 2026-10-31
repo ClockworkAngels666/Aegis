@@ -23,7 +23,7 @@ function Brand() {
       </svg>
       <div className="leading-none">
         <div className="text-[19px] font-bold">Aegis</div>
-        <div className="mt-0.5 hidden text-[12px] text-muted-foreground xl:block">
+        <div className="mt-0.5 hidden text-[12px] leading-snug text-muted-foreground xl:block">
           Open-Source Trade Intelligence &amp; Dual-Use Sanctions Radar
         </div>
       </div>
@@ -31,11 +31,11 @@ function Brand() {
   );
 }
 
-const NAV: { view: View; label: string }[] = [
-  { view: "assess", label: "Assessment" },
-  { view: "radar", label: "Radar" },
-  { view: "batch", label: "Batch screening" },
-  { view: "calc", label: "Calculator" },
+const NAV: { view: View; label: string; short: string }[] = [
+  { view: "assess", label: "Assessment", short: "Assessment" },
+  { view: "radar", label: "Radar", short: "Radar" },
+  { view: "batch", label: "Batch screening", short: "Batch" },
+  { view: "calc", label: "Calculator", short: "Calculator" },
 ];
 
 export function AppHeader({ reference, view, onView, onTour }: {
@@ -52,17 +52,17 @@ export function AppHeader({ reference, view, onView, onTour }: {
         <div className="flex h-14 items-center"><Brand /></div>
         <nav className="order-last -mx-4 flex w-full gap-1 overflow-x-auto border-t border-border px-4 md:order-none md:mx-0 md:h-14 md:w-auto md:border-0 md:px-0"
           aria-label="Views">
-          {NAV.map(({ view: v, label }) => (
+          {NAV.map(({ view: v, label, short }) => (
             <button key={v} type="button" onClick={() => onView(v)} data-tour={v === "radar" ? "nav-radar" : undefined}
               aria-current={view === v ? "page" : undefined}
-              className={cn("flex shrink-0 items-center border-b-2 px-3 py-2.5 text-[15px] transition-colors",
+              className={cn("flex shrink-0 items-center border-b-2 px-2.5 py-2.5 text-[15px] transition-colors sm:px-3",
                 view === v ? "border-foreground font-bold text-foreground" : "border-transparent text-muted-foreground hover:text-foreground")}>
-              {label}
+              <span className="sm:hidden">{short}</span><span className="max-sm:hidden">{label}</span>
             </button>
           ))}
         </nav>
         <div className="ml-auto flex h-14 items-center gap-1.5">
-          <Button variant="ghost" size="sm" onClick={onTour}><BinocularsIcon /> <span className="max-sm:hidden">Tour</span></Button>
+          <Button variant="ghost" size="sm" onClick={onTour}><BinocularsIcon /> <span className="max-sm:sr-only">Tour</span></Button>
           <MethodologyDialog reference={reference} />
           <Button variant="ghost" size="icon-sm" onClick={() => setTheme(dark ? "light" : "dark")}
             aria-label={dark ? "Switch to light theme" : "Switch to dark theme"} title={dark ? "Light theme" : "Dark theme"}>

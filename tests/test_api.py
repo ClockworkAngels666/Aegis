@@ -62,6 +62,10 @@ def test_validation():
     assert r.status_code == 422
     r = client.post("/api/assess", json={**BASE, "company": "X Co", "hs": "854231", "intermediary": "RU"})
     assert r.status_code == 422  # Russia is a reference series, not an intermediary
+    for code in ("999999", "980000", "770000", "000000"):  # outside HS chapters 01-97 (77 reserved)
+        r = client.post("/api/assess", json={**BASE, "company": "X Co", "hs": code, "intermediary": "KZ"})
+        assert r.status_code == 422, code
+        assert "chapters run from 01 to 97" in r.text
 
 
 def test_memo_sections():

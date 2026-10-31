@@ -124,7 +124,7 @@ export function CalculatorView({ reference, from }: { reference: Reference | nul
   return (
     <div className="space-y-4">
       <PageHeader title="Risk calculator"
-        description="Change the export figures and see how the route score and the recommended action respond. Same formulas as the assessment."
+        description="Change the export figures and see how the route risk and the recommended action respond. Same formulas as the assessment."
         actions={<>
           <Button variant="outline" size="sm" onClick={reset}><ArrowCounterClockwiseIcon /> {from ? "Reset to assessment" : "Reset"}</Button>
           <Button variant="outline" size="sm" onClick={download}><DownloadSimpleIcon /> Download CSV</Button>
@@ -216,7 +216,7 @@ export function CalculatorView({ reference, from }: { reference: Reference | nul
               <section className={cn("border border-border bg-card transition-opacity", busy && "opacity-70")} aria-live="polite">
                 <div className="flex flex-wrap items-start justify-between gap-4 px-5 py-4">
                   <div>
-                    <div className="text-[12px] text-muted-foreground">Route score</div>
+                    <div className="text-[12px] text-muted-foreground">Route risk</div>
                     <div className="mt-0.5 flex items-center gap-2">
                       <span className="text-4xl font-bold leading-none tabular">{r.score}</span>
                       <span className="text-muted-foreground">/ 100</span>
@@ -247,7 +247,7 @@ export function CalculatorView({ reference, from }: { reference: Reference | nul
                 <AnomalyChart route={r} partner={countryName} unit={inputs.unit} />
               </Panel>
 
-              <Panel title="Route score breakdown" subtitle="Weights can be changed here too.">
+              <Panel title="Route risk breakdown" subtitle="Weights can be changed here too.">
                 <ScoreBreakdown r={r} defaults={reference?.weights ?? {}} onWeights={setWeights} />
               </Panel>
             </>

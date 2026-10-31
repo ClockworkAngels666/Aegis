@@ -118,7 +118,8 @@ def _findings(ctx: dict) -> list[dict]:
                f"after 2022 ({_money(a['post_mean'], unit)} vs {_money(a['baseline']['mean'], unit)} a year).")
         if a["z_max"] is not None:
             above = "above" if a["z_max"] > a["threshold"] else "below"
-            txt += f" Peak Z-score {a['z_max']:.1f} in {a['z_max_year']} ({above} the {a['threshold']:.1f} threshold)."
+            txt += (f" The peak year, {a['z_max_year']}, was {a['z_max']:.1f} standard deviations from the pre-war average "
+                    f"({above} the {a['threshold']:.1f} flag threshold).")
         add("high" if a["band"] in ("CRITICAL", "HIGH") else "medium", "Route", txt)
     if a["note"]:
         add("info", "Route", a["note"])
@@ -159,11 +160,11 @@ def _findings(ctx: dict) -> list[dict]:
         add("medium" if prof["exposure"] >= 9 else "info", "Jurisdiction", f"{partner}: {prof['rationale']}")
     sens = a["sensitivity"]
     if a["custom_weights"]:
-        add("info", "Method", f"Custom score weights applied: route score {a['score']} ({a['band']}); default weights "
-                              f"give {sens['default']['score']} ({sens['default']['band']}).")
+        add("info", "Method", f"Custom score weights applied: route risk {a['score']} ({a['band'].capitalize()}); default weights "
+                              f"give {sens['default']['score']} ({sens['default']['band'].capitalize()}).")
     elif sens["equal"]["band"] != a["band"]:
-        add("info", "Method", f"Weighting matters here: with equal weights the route score is "
-                              f"{sens['equal']['score']} ({sens['equal']['band']}).")
+        add("info", "Method", f"Weighting matters here: with equal weights the route risk is "
+                              f"{sens['equal']['score']} ({sens['equal']['band'].capitalize()}).")
     order = {"critical": 0, "high": 1, "medium": 2, "info": 3}
     return sorted(out, key=lambda f: order[f["severity"]])
 
@@ -274,8 +275,8 @@ def _markdown(m: dict) -> str:
         "## Bottom line",
         m["bluf"],
         "",
-        f"Route risk: **{m['scores']['route']}/100 ({m['scores']['route_band']})**  |  "
-        f"Sanctions screening: **{m['scores']['entity']}/100 ({m['scores']['entity_status']})**",
+        f"Route risk: **{m['scores']['route']}/100 ({m['scores']['route_band'].capitalize()})**  |  "
+        f"Sanctions screening: **{m['scores']['entity']}/100 ({m['scores']['entity_status'].capitalize()})**",
         "",
     ]
     if m.get("narrative"):

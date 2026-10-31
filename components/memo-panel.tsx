@@ -1,9 +1,13 @@
 "use client";
 
-import { DownloadSimpleIcon, FileTextIcon, PrinterIcon, SpinnerGapIcon } from "@phosphor-icons/react";
+import { CaretRightIcon, DownloadSimpleIcon, FileTextIcon, PrinterIcon, SpinnerGapIcon } from "@phosphor-icons/react";
 import { createPortal } from "react-dom";
+import type { Section } from "@/components/assessment-summary";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Panel } from "@/components/panel";
+import { sentenceCase, ToneIcon } from "@/components/status";
+import type { Tone } from "@/lib/format";
 import type { Memo } from "@/lib/types";
 
 const SEVERITY_INK: Record<Memo["findings"][number]["severity"], string> = {
@@ -23,11 +27,11 @@ function MemoDocument({ m }: { m: Memo }) {
       <h3 className="mt-4 text-xl font-bold">{m.title}</h3>
       <p className="mt-1 text-[#444]"><b className="text-[#151515]">Subject:</b> {m.subject}</p>
 
-      <div className="mt-4 border-l-4 py-1 pl-3" style={{ borderColor: m.verdict.level >= 3 ? "#b42318" : m.verdict.level === 2 ? "#c2410c" : "#15803d" }}>
+      <div className="mt-4 border px-3 py-2" style={{ borderColor: m.verdict.level >= 3 ? "#b42318" : m.verdict.level === 2 ? "#c2410c" : "#15803d" }}>
         <div className="font-mono text-[14px] font-bold text-[#444]">Bottom line</div>
         <p className="font-semibold">{m.bluf}</p>
-        <p className="mt-1 font-mono text-[11px] text-[#444]">
-          Route risk {m.scores.route}/100 {m.scores.route_band} · Sanctions screening {m.scores.entity}/100 {m.scores.entity_status}
+        <p className="mt-1 font-mono text-[12px] text-[#444]">
+          Route risk {m.scores.route}/100 {sentenceCase(m.scores.route_band)} · Sanctions screening {m.scores.entity}/100 {sentenceCase(m.scores.entity_status)}
         </p>
       </div>
 
@@ -61,7 +65,7 @@ function MemoDocument({ m }: { m: Memo }) {
         <ol className="list-decimal space-y-1 pl-4">{m.edd.map((x) => <li key={x}>{x}</li>)}</ol>
       </section>
 
-      <section className="mt-4 text-[11px] text-[#444]">
+      <section className="mt-4 text-[12px] text-[#444]">
         <h4 className="memo-h">Limitations</h4>
         <ul className="list-disc space-y-0.5 pl-4">{m.limitations.map((x) => <li key={x}>{x}</li>)}</ul>
       </section>
@@ -104,7 +108,7 @@ export function MemoPanel({ memo, loading, error, onGenerate, stale }: {
       }
     >
       {memo && !stale ? (
-        <div className="max-h-[720px] overflow-y-auto bg-muted p-3 sm:p-5"><div className="mx-auto max-w-[820px] shadow-[0_1px_3px_rgba(16,24,40,0.12)] ring-1 ring-border">
+        <div className="max-h-[720px] overflow-y-auto bg-muted p-3 sm:p-5"><div className="mx-auto max-w-[820px] ring-1 ring-border">
           <MemoDocument m={memo} />
         </div></div>
       ) : (
@@ -117,10 +121,65 @@ export function MemoPanel({ memo, loading, error, onGenerate, stale }: {
             {loading ? <SpinnerGapIcon className="animate-spin" /> : <FileTextIcon />}
             {loading ? "Drafting…" : "Generate briefing"}
           </Button>
-          {error && <p className="text-[11px] text-destructive">{error}</p>}
+          {error && <p className="text-[13px] text-destructive">{error}</p>}
         </div>
       )}
       {memo && !stale && typeof document !== "undefined" && createPortal(<div id="memo-print"><MemoDocument m={memo} /></div>, document.body)}
+    </Panel>
+  );
+}
+
+/** Briefing areas and the assessment tab that holds their evidence. */
+const AREA: Record<string, { label: string; section: Section }> = {
+  Entity: { label: "Counterparty", section: "counterparty" },
+  Item: { label: "Goods", section: "goods" },
+  Jurisdiction: { label: "Country", section: "route" },
+};
+const SEVERITY_TONE: Record<Memo["findings"][number]["severity"], Tone> = {
+  critical: "critical", high: "serious", medium: "warning", info: "neutral",
+};
+
+/** The briefing's key findings, each opening the tab with its evidence. Overview leads with these. */
+export function KeyFindings({ memo, loading, error, onRetry, onSection }: {
+  memo: Memo | null;
+  loading: boolean;
+  error: string | null;
+  onRetry: () => void;
+  onSection: (s: Section) => void;
+}) {
+  return (
+    <Panel title="Key findings" subtitle="What the checks found. Select a finding to see the evidence." bodyClassName="p-0">
+      {memo ? (
+        <ul className="divide-y divide-border">
+          {memo.findings.map((f) => {
+            const area = AREA[f.area] ?? { label: f.area, section: "route" as Section };
+            return (
+              <li key={f.text}>
+                <button type="button" onClick={() => onSection(area.section)}
+                  className="group flex w-full items-start gap-3 px-5 py-2.5 text-left transition-colors hover:bg-muted">
+                  <ToneIcon tone={SEVERITY_TONE[f.severity]} className="mt-[3px] size-4" />
+                  <span className="min-w-0 flex-1 text-[14px] leading-snug sm:flex sm:gap-3">
+                    <span className="block font-semibold sm:w-24 sm:shrink-0">{area.label}</span>
+                    <span className="block">{f.text}</span>
+                  </span>
+                  <CaretRightIcon className="mt-[3px] size-3.5 shrink-0 opacity-40 group-hover:opacity-100" aria-hidden />
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      ) : error && !loading ? (
+        <div className="flex flex-wrap items-center gap-3 px-5 py-4 text-sm text-muted-foreground">
+          Findings could not be loaded: {error}
+          <Button size="xs" variant="outline" onClick={onRetry}>Try again</Button>
+        </div>
+      ) : (
+        <div className="space-y-2 px-5 py-4" aria-busy="true" aria-label="Loading findings">
+          <Skeleton className="h-4 w-3/4 motion-reduce:animate-none" />
+          <Skeleton className="h-4 w-2/3 motion-reduce:animate-none" />
+          <Skeleton className="h-4 w-1/2 motion-reduce:animate-none" />
+        </div>
+      )}
     </Panel>
   );
 }

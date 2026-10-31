@@ -9,8 +9,9 @@ import { AssessmentSummary, type Section, SectionTabs } from "@/components/asses
 import { BatchView, type BatchState } from "@/components/batch-view";
 import { CorridorPanel, Segmented } from "@/components/corridor-panel";
 import { Loading3D } from "@/components/three/lazy";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MemoPanel } from "@/components/memo-panel";
+import { KeyFindings, MemoPanel } from "@/components/memo-panel";
 import { Panel } from "@/components/panel";
 import { PRESETS, QueryPanel, toRequest, type FormState } from "@/components/query-panel";
 import { RadarView } from "@/components/radar-view";
@@ -42,7 +43,7 @@ export function Dashboard() {
   const [view, setView] = useState<View>("assess");
   const [section, setSection] = useState<Section>("overview");
   const [sceneView, setSceneView] = usePersisted<"3d" | "flat">("aegis-scene-view", "3d", ["3d", "flat"]);
-  const [mapView, setMapView] = usePersisted<"globe" | "flat">("aegis-corridor-view", "globe", ["globe", "flat"]);
+  const [mapView, setMapView] = usePersisted<"globe" | "flat">("aegis-corridor-view", "flat", ["globe", "flat"]);
   const [touring, setTouring] = useState(false);
   const [reference, setReference] = useState<Reference | null>(null);
   const [form, setForm] = useState<FormState>(PRESETS[0].form);
@@ -60,7 +61,25 @@ export function Dashboard() {
   // The address the page was opened with (read once) and whether its state has been applied yet
   const initialUrl = useRef<string | null>(null);
   const urlApplied = useRef(false);
+  // The first address written after load replaces the opened one; later changes add history entries
+  const urlPushes = useRef(false);
   const seq = useRef(0);
+
+  // The briefing comes with every result: Overview opens on its key findings. Answers for an older run are dropped.
+  const fetchMemo = useCallback(async (f: FormState, w: Weights | null, id: number) => {
+    setMemoLoading(true);
+    setMemoError(null);
+    try {
+      const m = await api.memo(toRequest(f, w));
+      if (id === seq.current) setMemo(m);
+    } catch (e) {
+      if (id !== seq.current) return;
+      if (e instanceof ApiUnavailable) setOffline(true);
+      setMemoError(e instanceof Error ? e.message : "Request failed");
+    } finally {
+      if (id === seq.current) setMemoLoading(false);
+    }
+  }, []);
 
   const load = useCallback(async (f: FormState, id: number, w: Weights | null, reveal = false) => {
     try {
@@ -69,7 +88,7 @@ export function Dashboard() {
       setAssessment(a);
       setOffline(false);
       setMemo(null);
-      setMemoError(null);
+      void fetchMemo(f, w, id);
       // On narrow screens the form sits above the results: bring the new result into view
       if (reveal && window.matchMedia("(max-width: 1023px)").matches) {
         requestAnimationFrame(() => document.querySelector('[data-tour="verdict"]')?.scrollIntoView({ behavior: "smooth", block: "start" }));
@@ -81,7 +100,7 @@ export function Dashboard() {
     } finally {
       if (id === seq.current) setLoading(false);
     }
-  }, []);
+  }, [fetchMemo]);
 
   const run = useCallback((f: FormState, w: Weights | null = weights, reveal = false) => {
     const id = ++seq.current;
@@ -116,18 +135,7 @@ export function Dashboard() {
     run(lastRun.current, w);
   };
 
-  const generateMemo = async () => {
-    setMemoLoading(true);
-    setMemoError(null);
-    try {
-      setMemo(await api.memo(toRequest(lastRun.current, weights)));
-    } catch (e) {
-      if (e instanceof ApiUnavailable) setOffline(true);
-      setMemoError(e instanceof Error ? e.message : "Request failed");
-    } finally {
-      setMemoLoading(false);
-    }
-  };
+  const generateMemo = () => void fetchMemo(lastRun.current, weights, seq.current);
 
   const startTour = () => {
     setView("assess");
@@ -155,15 +163,37 @@ export function Dashboard() {
     const id = ++seq.current;
     api.reference().then(setReference).catch(onFailure);
     api.assess(toRequest(start))
-      .then((a) => { if (id === seq.current) setAssessment(a); })
+      .then((a) => {
+        if (id !== seq.current) return;
+        setAssessment(a);
+        void fetchMemo(start, null, id);
+      })
       .catch((e: Error) => { if (id === seq.current) onFailure(e); })
       .finally(() => { if (id === seq.current) setLoading(false); });
-  }, []);
+  }, [fetchMemo]); // fetchMemo never changes, so this still runs once
 
-  // Keep the address bar in step with the result on screen, so the link can be shared or bookmarked
+  // Keep the address bar in step with the result on screen, so the link can be shared or bookmarked.
+  // Nothing is written while a result loads (history never pairs the old company with a new tab) or before the first one.
   useEffect(() => {
-    if (urlApplied.current) writeUrl(assessment, view, section);
-  }, [assessment, view, section]);
+    if (!urlApplied.current || loading || !assessment) return;
+    writeUrl(assessment, view, section, urlPushes.current);
+    urlPushes.current = true;
+  }, [assessment, view, section, loading]);
+
+  // Back and Forward restore the view, tab and assessment of that history entry
+  useEffect(() => {
+    const onPop = () => {
+      const url = readUrl(window.location.search);
+      setView(url.view ?? "assess");
+      setSection(url.section ?? "overview");
+      if (url.form && JSON.stringify(url.form) !== JSON.stringify(lastRun.current)) {
+        setForm(url.form);
+        run(url.form);
+      }
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, [run]);
 
   // When the backend comes back, reload the reference data and re-run the last assessment
   useReconnect(offline, () => {
@@ -200,25 +230,29 @@ export function Dashboard() {
 
       {view === "assess" && (
         <main className="mx-auto grid w-full max-w-[1440px] flex-1 gap-5 px-4 py-5 sm:px-6 lg:grid-cols-[300px_minmax(0,1fr)]">
-          <aside className="lg:sticky lg:top-4 lg:self-start" data-tour="query">
+          <aside className="order-2 lg:order-none lg:sticky lg:top-4 lg:self-start" data-tour="query">
             <QueryPanel reference={reference} form={form} setForm={(f) => { setForm(f); setActive(null); }}
               onRun={(f) => run(f, weights, true)} loading={loading} active={active} />
           </aside>
 
-          <div className={cn("min-w-0 space-y-4 transition-opacity", loading && a && "opacity-60")}>
+          <div className={cn("order-1 min-w-0 space-y-4 transition-opacity lg:order-none", loading && a && "opacity-60")}>
             {offline ? (
               <div className="flex items-center gap-2 border border-[color-mix(in_srgb,var(--status-warning)_55%,transparent)] bg-[color-mix(in_srgb,var(--status-warning)_12%,transparent)] px-4 py-2 text-sm">
                 <SpinnerGapIcon className="size-4 shrink-0 animate-spin text-warning-ink" /> {new ApiUnavailable().message}
               </div>
             ) : error && (
-              <div className="flex items-center gap-2 border border-destructive/40 bg-destructive/10 px-4 py-2 text-sm">
-                <WarningIcon className="size-4 shrink-0 text-destructive" /> {error}
+              <div className="flex flex-wrap items-center gap-2 border border-destructive/40 bg-destructive/10 px-4 py-2 text-sm" role="alert">
+                <WarningIcon className="size-4 shrink-0 text-destructive" /> <span className="flex-1">{error}</span>
+                <Button size="xs" variant="outline" onClick={() => run(lastRun.current)}>Try again</Button>
               </div>
             )}
 
             {!a ? (
               loading && !offline ? (
-                <div className="space-y-4" aria-busy="true" aria-label="Running assessment">
+                <div className="space-y-4" aria-busy="true">
+                  <p className="flex items-center gap-2 text-sm text-muted-foreground" role="status">
+                    <SpinnerGapIcon className="size-4 animate-spin motion-reduce:animate-none" aria-hidden /> Running assessment…
+                  </p>
                   <Skeleton className="h-[236px] border border-border motion-reduce:animate-none" />
                   <Skeleton className="h-10 motion-reduce:animate-none" />
                   <Skeleton className="h-[420px] border border-border motion-reduce:animate-none" />
@@ -230,19 +264,14 @@ export function Dashboard() {
               )
             ) : (
               <>
-                <AssessmentSummary a={a} onSection={setSection} />
+                <AssessmentSummary a={a} onSection={setSection} listsDate={reference?.sanctions.retrieved} />
                 <SectionTabs value={section} onChange={setSection} a={a} />
+                <div id="section-panel" role="tabpanel" aria-labelledby={`tab-${section}`} className="space-y-4">
 
                 {section === "overview" && (
                   <ViewBoundary label="Overview" resetKey={a.generated_at}>
-                    <Panel title="Shipment" subtitle="Illustration of the route and transport modes, not an observed shipment."
-                      bodyClassName="px-2 pb-4 pt-3 sm:px-4" tour="scene"
-                      action={<Segmented value={sceneView} onChange={setSceneView} options={[
-                        { value: "3d", label: "3D", icon: <CubeIcon className="size-4" /> },
-                        { value: "flat", label: "Illustration", icon: <ImageIcon className="size-4" /> },
-                      ]} />}>
-                      <RouteScene a={a} view={sceneView} />
-                    </Panel>
+                    <KeyFindings memo={loading ? null : memo} loading={memoLoading || loading} error={memoError}
+                      onRetry={generateMemo} onSection={setSection} />
                     <Panel title="Trade corridors" subtitle={`Main sea, rail, road and air routes from ${exporterName} via ${partner} to Russia.`} tour="map"
                       action={<Segmented value={mapView} onChange={setMapView} options={[
                         { value: "globe", label: "Globe", icon: <GlobeHemisphereEastIcon className="size-4" /> },
@@ -250,6 +279,14 @@ export function Dashboard() {
                       ]} />}>
                       <CorridorPanel view={mapView} exporter={a.query.exporter} exporterName={exporterName} flows={a.flows}
                         intermediary={a.query.intermediary} intermediaryName={partner} onSelect={(code) => rerun({ intermediary: code })} />
+                    </Panel>
+                    <Panel title="Shipment" subtitle="Illustration of the route and transport modes, not an observed shipment."
+                      bodyClassName="px-2 pb-4 pt-3 sm:px-4" tour="scene"
+                      action={<Segmented value={sceneView} onChange={setSceneView} options={[
+                        { value: "3d", label: "3D", icon: <CubeIcon className="size-4" /> },
+                        { value: "flat", label: "Illustration", icon: <ImageIcon className="size-4" /> },
+                      ]} />}>
+                      <RouteScene a={a} view={sceneView} />
                     </Panel>
                   </ViewBoundary>
                 )}
@@ -288,6 +325,7 @@ export function Dashboard() {
                     </div>
                   </ViewBoundary>
                 )}
+                </div>
               </>
             )}
           </div>

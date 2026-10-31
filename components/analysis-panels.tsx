@@ -20,14 +20,16 @@ import { Flag } from "@/components/visuals";
 import { monthLabel, money, times, moneyTick, niceTicks } from "@/lib/format";
 import type { Mirror, Monthly, UnitValues, Unit } from "@/lib/types";
 
-const TICK = { fill: "var(--muted-foreground)", fontSize: 11, fontFamily: "var(--font-sans)" };
+const TICK = { fill: "var(--muted-foreground)", fontSize: 12, fontFamily: "var(--font-sans)" };
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 type TipProps = { active?: boolean; payload?: ReadonlyArray<{ payload?: unknown }> };
 
 export function Stat({ label, value, sub, tone }: { label: string; value: ReactNode; sub?: ReactNode; tone?: string }) {
   return (
-    <div className="min-w-0 border-l-2 pl-3" style={{ borderColor: tone ?? "var(--border)" }}>
-      <div className="text-[12px] text-muted-foreground">{label}</div>
+    <div className="min-w-0">
+      <div className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
+        {tone && <span className="size-2 shrink-0 rounded-full" style={{ background: tone }} aria-hidden />}{label}
+      </div>
       <div className="text-xl font-bold leading-tight">{value}</div>
       {sub && <div className="text-[12px] text-muted-foreground">{sub}</div>}
     </div>
@@ -80,7 +82,7 @@ export function MonthlyPanel({ m }: { m: Monthly | null }) {
                 <TipBox>
                   <div className="font-bold">{monthLabel(d.mo)}</div>
                   <div>{money(d.value, m.unit, 2)}</div>
-                  {d.z !== null && <div className="text-muted-foreground">Z {d.z.toFixed(1)}</div>}
+                  {d.z !== null && <div className="text-muted-foreground">{d.z.toFixed(1)} standard deviations from the pre-war average</div>}
                 </TipBox>
               );
             }} />
@@ -118,7 +120,7 @@ export function PricePanel({ u, unit }: { u: UnitValues | null; unit: Unit }) {
           <Stat label="Change" value={u.change !== null ? `${u.change.toFixed(1)}×` : "—"}
             tone={u.flag ? "var(--status-serious)" : "var(--status-good)"} />
         </div>
-        <StatusBadge tone={u.flag ? "serious" : "good"}>{u.flag ? "Price shift" : "Stable"}</StatusBadge>
+        <StatusBadge tone={u.flag ? "serious" : "good"}>{u.flag ? "Price shift" : "No 2× shift"}</StatusBadge>
       </div>
       <div className="h-[170px]">
         <ResponsiveContainer width="100%" height="100%">

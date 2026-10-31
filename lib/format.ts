@@ -53,6 +53,9 @@ export const verdictTone: Record<VerdictCode, Tone> = {
   STANDARD: "good",
 };
 
+/** Decisions that block the shipment (Stop, Hold) get a solid badge; warnings stay outlined. */
+export const verdictSolid = (code: VerdictCode) => code === "STOP" || code === "HOLD";
+
 export const toneVar: Record<Tone, string> = {
   good: "var(--status-good)",
   warning: "var(--status-warning)",
@@ -62,7 +65,7 @@ export const toneVar: Record<Tone, string> = {
 };
 
 export const componentLabel: Record<string, string> = {
-  anomaly: "Statistical anomaly (Z)",
+  anomaly: "Unusual years",
   surge: "Surge vs baseline",
   materiality: "Materiality (value)",
   criticality: "Item criticality",

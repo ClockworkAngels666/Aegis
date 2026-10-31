@@ -112,7 +112,7 @@ export function ToolButton({ label, onClick, active, children }: {
 }) {
   return (
     <button type="button" onClick={onClick} aria-label={label} title={label} aria-pressed={active}
-      className={cn("inline-flex h-7 min-w-7 items-center justify-center gap-1 border border-border px-1.5 text-[12px] shadow-sm",
+      className={cn("inline-flex h-7 min-w-7 items-center justify-center gap-1 border border-border px-1.5 text-[12px]",
         active ? "bg-primary text-primary-foreground" : "bg-card text-foreground hover:bg-muted")}>
       {children}
     </button>
@@ -147,8 +147,10 @@ export function Frame3D({ hostRef, stageRef, label, className, tip, failed, tool
             <ToolButton label="Zoom out" onClick={() => stageRef.current?.zoom(1.25)}><MagnifyingGlassMinusIcon className="size-3.5" /></ToolButton>
             <ToolButton label="Reset view" onClick={() => stageRef.current?.home()}><ArrowCounterClockwiseIcon className="size-3.5" /></ToolButton>
           </div>
-          <div className="pointer-events-none absolute bottom-2 left-3 z-10 text-[11px] text-faint">
-            {hint ?? "Drag to rotate · Ctrl + scroll or pinch to zoom"}
+          <div className="pointer-events-none absolute bottom-2 left-3 z-10 text-[12px] text-faint">
+            <span className="[@media(hover:none)]:hidden">{hint ?? "Drag to rotate · Ctrl + scroll or pinch to zoom"}</span>
+            {/* Touch screens have no hover or Ctrl: keep the drag part and name the pinch */}
+            <span className="hidden [@media(hover:none)]:inline">{(hint ?? "Drag to rotate").split(" · ")[0]} · pinch to zoom</span>
           </div>
         </>
       )}

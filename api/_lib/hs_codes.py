@@ -12,6 +12,11 @@ TIER_WEIGHT = {"1": 15, "2": 12, "3.A": 9, "3.B": 9, "4.A": 6, "4.B": 6}  # of 1
 HS_PATTERN = re.compile(r"^\d{6}$")
 
 
+def real_chapter(hs: str) -> bool:
+    """HS chapters run from 01 to 97; 77 is reserved and 98/99 are national or 'not specified' codes."""
+    return 1 <= int(hs[:2]) <= 97 and hs[:2] != "77"
+
+
 @lru_cache(maxsize=1)
 def chpl() -> dict:
     return json.loads((config.DATA_DIR / "chpl.json").read_text(encoding="utf-8"))
